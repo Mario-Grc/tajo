@@ -21,7 +21,7 @@ fn main() {
     let trim: Trim = Trim { input, output, start, end };
 
     match trim.run(&ffmpeg_path()) {
-        Ok(()) => println!("Listo: {}", trim.output),
+        Ok(output) => println!("Listo: {}", output),
         Err(e) => {
             eprintln!("Error: {e}"); 
             std::process::exit(1);

@@ -28,12 +28,12 @@ impl Trim {
     }
 
     /// lanzar ffmpeg y ejecutar el recorte
-    pub fn run(&self, ffmpeg: &str) -> Result<(), String> {
+    pub fn run(&self, ffmpeg: &str) -> Result<String, String> {
         let result = Command::new(ffmpeg).args(self.build_args())
         .output().map_err(|e| format!("no se pudo lanzar ffmpeg: {e}"))?;
         
         if result.status.success() {
-            Ok(())
+            Ok(self.output.clone())
         } else {
             let stderr = String::from_utf8_lossy(&result.stderr);
             Err(format!("ffmpeg terminó con el siguiente error: {stderr}"))
