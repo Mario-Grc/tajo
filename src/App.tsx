@@ -40,7 +40,6 @@ function App() {
     <div className="flex h-screen flex-col bg-background text-foreground select-none">
       {/* Header */}
       <header className="h-14 flex-shrink-0 flex items-center justify-between border-b border-border px-4">
-        <span className="text-sm font-semibold traking-tight">TAJO</span>
         <Button variant="secondary" size="sm" >Cola</Button>
       </header>
 
