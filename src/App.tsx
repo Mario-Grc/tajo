@@ -1,77 +1,129 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/sonner";
+import {toast } from "sonner";
 
-export function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+function App() {
+  const [inputPath, setInputPath] = useState("");
+  const [startTime, setStartTime] = useState("00:00:00");
+  const [endTime, setEndTime] = useState("00:00:10");
   const [loading, setLoading] = useState(false);
 
-  async function greet() {
+  const handleTrim = async () => {
+    if (!inputPath) {
+      toast.error("Por favor, ingresa la ruta del vídeo.");
+      return;
+    }
+
     setLoading(true);
+    const toastId = toast.info("Procesando recorte...");
+
     try {
-      const response = await invoke<string>("greet", { name });
-      setGreetMsg(response);
+      const result = await invoke<string>("run_trim", {
+        start: startTime,
+        end: endTime,
+        input: inputPath,
+        output: null,
+      });
+
+      toast.success(`Recorte completado. Guardado en: ${result}`, { id: toastId });
     } catch (error) {
-      console.error(error);
+      toast.error(`Error: ${error}`, { id: toastId });
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <main className="flex h-screen flex-col items-center justify-center bg-background text-foreground p-8 select-none">
-      <div className="max-w-md w-full space-y-6 text-center border border-border bg-card p-6 rounded-none">
-        
-        {/* Cabecera */}
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            TAJO Editor
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Verificación de interfaz Tailwind v4 + shadcn (Lyra)
+    <div className="flex h-screen flex-col bg-background text-foreground select-none">
+      {/* Header */}
+      <header className="h-14 flex-shrink-0 flex items-center justify-between border-b border-border px-4">
+        <span className="text-sm font-semibold traking-tight">TAJO</span>
+        <Button variant="secondary" size="sm" >Cola</Button>
+      </header>
+
+      {/* zona principal con 3 columnas */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* panel para la cola*/}
+        <aside className="w-64 flex-shrink-0 border-r border-border p-3 overflow-y-auto">
+          <p className="text-xs text-muted-foreground">
+            {/* TODO hacer la cola*/}
+            Sin vídeos en la cola
           </p>
-        </div>
+        </aside>
 
-        {/* Input y Botón de prueba */}
-        <form
-          className="flex flex-col gap-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            greet();
-          }}
-        >
-          <input
-            className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-colors"
-            placeholder="Escribe algo para Rust..."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+      {/* zona central */}
+        <main className="flex-1 flex flex-col items-center justify-center p-8 overflow-y-auto">
+          <div className="max-w-md w-full space-y-6 border border-border bg-card p-6 rounded-none">
+            <div className="space-y-1 text-center">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                Aquí estaría la previsualización del vídeo
+              </h1>
+            </div>
 
-          <div className="flex gap-2 justify-center">
-            <Button type="submit" disabled={loading}>
-              {loading ? "Procesando..." : "Enviar a Rust"}
-            </Button>
-            
-            <Button variant="secondary" type="button">
-              Secundario
-            </Button>
-            
-            <Button variant="destructive" type="button">
-              Borrar
-            </Button>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Ruta del vídeo:</label>
+                <Input
+                  type="text"
+                  placeholder="C:\videos\partida.mp4"
+                  value={inputPath}
+                  onChange={(e) => setInputPath(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex-1 space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Inicio:</label>
+                  <Input
+                    type="text"
+                    placeholder="00:00:00"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
+
+                <div className="flex-1 space-y-1.5">
+                  <label className="text-xs text-muted-foreground">Fin:</label>
+                  <Input
+                    type="text"
+                    placeholder="00:00:10"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+
+              <Button onClick={handleTrim} disabled={loading} className="w-full">
+                {loading ? "Procesando..." : "Recortar Vídeo"}
+              </Button>
+            </div>
           </div>
-        </form>
+        </main>
 
-        {/* Mensaje de respuesta de Rust */}
-        {greetMsg && (
-          <div className="p-3 bg-background border border-border text-sm font-mono text-emerald-400">
-            {greetMsg}
-          </div>
-        )}
-
+        {/* Panel opciones de la operación activa */}
+        <aside className="w-64 flex-shrink-0 border-l border-border p-3 overflow-y-auto">
+          <p className="text-xs text-muted-foreground">
+            {/* TODO: panel de opciones */}
+            Aquí irán las opciones y ajustes
+          </p>
+        </aside>
       </div>
-    </main>
+
+      {/* Footer timeline */}
+      <footer className="h-20 flex-shrink-0 border-t border-border p-3">
+        <p className="text-xs text-muted-foreground">
+          {/* TODO: timeline + marcas In/Out */}
+          Timeline
+        </p>
+      </footer>
+
+      <Toaster theme="dark" position="bottom-right" />
+    </div>
   );
 }
 
