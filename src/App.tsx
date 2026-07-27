@@ -4,9 +4,9 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { dirname, join } from "@tauri-apps/api/path";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 const VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "avi", "webm", "m4v", "wmv", "flv"];
 
@@ -31,6 +31,9 @@ function App() {
   const [startTime, setStartTime] = useState("00:00:00");
   const [endTime, setEndTime] = useState("00:00:10");
   const [loading, setLoading] = useState(false);
+  const [showQueue, setShowQueue] = useState(true);
+
+  const queueCount = 0; // TODO: contar vídeos en cola
 
   const handlePickInput = async () => {
     const selected = await open({
@@ -90,20 +93,49 @@ function App() {
     <div className="flex h-screen flex-col bg-background text-foreground select-none">
       {/* Header */}
       <header className="h-10 flex-shrink-0 flex items-center justify-start border-b border-border px-4">
-        <Button variant="secondary" size="sm">
-          Cola
-        </Button>
+
       </header>
 
-      {/* Main: 3 columnas */}
+      {/* zona principal con 3 columnas */}
       <div className="flex flex-1 overflow-hidden">
         {/* Panel izquierdo: cola de vídeos */}
-        <aside className="w-64 flex-shrink-0 border-r border-border p-3 overflow-y-auto">
-          <p className="text-xs text-muted-foreground">
-            {/* TODO: cola de vídeos */}
-            Sin vídeos en cola
-          </p>
-        </aside>
+        {showQueue ? (
+          <aside className="w-64 flex-shrink-0 border-r border-border flex flex-col overflow-y-auto">
+            <div className="h-10 flex-shrink-0 flex items-center justify-between border-b border-border px-3">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Cola
+              </h2>
+              <button
+                onClick={() => setShowQueue(false)}
+                className="text-muted-foreground hover:text-foreground"
+                title="Ocultar cola"
+              >
+                <PanelLeftClose className="size-4" />
+              </button>
+            </div>
+            <div className="p-3">
+              <p className="text-xs text-muted-foreground">
+                {/* TODO: cola de vídeos */}
+                Sin vídeos en cola
+              </p>
+            </div>
+          </aside>
+        ) : (
+          <aside className="w-10 flex-shrink-0 border-r border-border flex flex-col items-center pt-2 gap-1">
+            <button
+              onClick={() => setShowQueue(true)}
+              className="text-muted-foreground hover:text-foreground p-1.5"
+              title="Mostrar cola"
+            >
+              <PanelLeftOpen className="size-4" />
+            </button>
+            {queueCount > 0 && (
+              <span className="text-[10px] leading-none bg-secondary text-foreground rounded-full size-4 flex items-center justify-center">
+                {queueCount}
+              </span>
+            )}
+          </aside>
+        )}
 
         {/* Zona central */}
         <main className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
@@ -128,7 +160,7 @@ function App() {
                 title={inputPath}
               />
               <Button variant="secondary" size="sm" className="w-full" onClick={handlePickInput}>
-                Seleccionar vídeo...
+                Seleccionar vídeo
               </Button>
             </div>
           </div>
@@ -146,7 +178,7 @@ function App() {
                 title={outputPath}
               />
               <Button variant="secondary" size="sm" className="w-full" onClick={handlePickOutput}>
-                Elegir destino...
+                Elegir destino
               </Button>
             </div>
           </div>
