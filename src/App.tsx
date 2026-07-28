@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { VideoPlayer } from "./components/VideoPlayer";
 
 const VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "avi", "webm", "m4v", "wmv", "flv"];
 
@@ -138,11 +139,14 @@ function App() {
         )}
 
         {/* Zona central */}
-        <main className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
-          <p className="text-sm text-muted-foreground">
-            {/* TODO: reproductor de vídeo */}
-            Aquí estará la previsualización del vídeo
-          </p>
+        <main className="flex-1 flex items-center justify-center overflow-y-auto">
+          {inputPath ? (
+            <VideoPlayer key={inputPath} inputPath={inputPath}/>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Selecciona un vídeo para comenzar.
+            </p>
+          )}
         </main>
 
         {/* Panel derecho: opciones*/}
