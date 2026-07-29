@@ -1,6 +1,6 @@
 import { useVideoPlayer } from "../hooks/useVideoPlayer";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import {Pause, Play} from "lucide-react";
+import {Pause, Play, Volume2, VolumeX} from "lucide-react";
 import {Slider } from "@/components/ui/slider";
 
 function formatTime(seconds: number): string {
@@ -16,7 +16,7 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ inputPath }: VideoPlayerProps) {
-    const { videoRef, isPlaying, currentTime, duration, togglePlay, seek } = useVideoPlayer();
+    const { videoRef, isPlaying, currentTime, duration, togglePlay, seek, isMuted, toggleMute } = useVideoPlayer();
 
     const assetUrl = convertFileSrc(inputPath);
 
@@ -35,7 +35,7 @@ export function VideoPlayer({ inputPath }: VideoPlayerProps) {
                 {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
                 </button>
 
-                <span className="w-20 text-right font-mono text-xs text-muted-foreground">
+                <span className="text-right font-mono text-xs text-muted-foreground">
                 {formatTime(currentTime)}
                 </span>
 
@@ -47,9 +47,18 @@ export function VideoPlayer({ inputPath }: VideoPlayerProps) {
                 className="flex-1"
                 />
                 
-                <span className="w-20 font-mono text-xs text-muted-foreground">
+                <span className="font-mono text-xs text-muted-foreground">
                 {formatTime(duration)}
                 </span>
+
+                <button
+                onClick={toggleMute}
+                className="text-foreground hover:text-primary flex-shrink-0"
+                title={isMuted ? "Activar sonido" : "Silenciar"}
+                >
+
+                {isMuted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+                </button>
             </div>
         </div>
     );

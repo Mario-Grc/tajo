@@ -6,6 +6,7 @@ export function useVideoPlayer() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [isMuted, setIsMuted] = useState(false);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -16,12 +17,14 @@ export function useVideoPlayer() {
         const onLoadMetadata = () => setDuration(video.duration);
         const onPlay = () => setIsPlaying(true);
         const onPause = () => setIsPlaying(false);
+        const onVolumeChange = () => setIsMuted(video.muted);
 
         video.addEventListener("timeupdate", onTimeUpdate);
         video.addEventListener("loadedmetadata", onLoadMetadata);
         video.addEventListener("play", onPlay);
         video.addEventListener("pause", onPause);
         video.addEventListener("ended", onPause);
+        video.addEventListener("volumechange", onVolumeChange);
 
         return () => {
             video.removeEventListener("timeupdate", onTimeUpdate);
@@ -29,6 +32,7 @@ export function useVideoPlayer() {
             video.removeEventListener("play", onPlay);
             video.removeEventListener("pause", onPause);
             video.removeEventListener("ended", onPause);
+            video.removeEventListener("volumechange", onVolumeChange);
         };
     }, []);
 
@@ -45,12 +49,20 @@ export function useVideoPlayer() {
         setCurrentTime(time);
     }, []);
 
+    const toggleMute = useCallback(() => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.muted = !video.muted;
+    }, []);
+
     return {
         videoRef,
         isPlaying,
         currentTime,
         duration,
         togglePlay,
-        seek
+        seek,
+        isMuted,
+        toggleMute
     };
 }
