@@ -11,6 +11,11 @@ import { VideoPlayer } from "./components/VideoPlayer";
 
 const VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "avi", "webm", "m4v", "wmv", "flv"];
 
+interface FfmpegError {
+  summary: string;
+  full: string;
+}
+
 function truncate(text: string, max = 180) {
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
@@ -84,7 +89,13 @@ function App() {
 
       toast.success(truncate(`Recorte completado. Guardado en: ${result}`), { id: toastId });
     } catch (error) {
-      toast.error(truncate(`Error: ${error}`), { id: toastId });
+      const err = error as FfmpegError;
+
+      console.error("[FFmpeg Full Log]:\n", err.full);
+
+      const errorMessage = err.summary || String(error);
+
+      toast.error(truncate(errorMessage), { id: toastId });
     } finally {
       setLoading(false);
     }

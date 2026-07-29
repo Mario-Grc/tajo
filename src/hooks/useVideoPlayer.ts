@@ -7,6 +7,7 @@ export function useVideoPlayer() {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -18,6 +19,7 @@ export function useVideoPlayer() {
         const onPlay = () => setIsPlaying(true);
         const onPause = () => setIsPlaying(false);
         const onVolumeChange = () => setIsMuted(video.muted);
+        const onError = () => setHasError(true);
 
         video.addEventListener("timeupdate", onTimeUpdate);
         video.addEventListener("loadedmetadata", onLoadMetadata);
@@ -25,7 +27,7 @@ export function useVideoPlayer() {
         video.addEventListener("pause", onPause);
         video.addEventListener("ended", onPause);
         video.addEventListener("volumechange", onVolumeChange);
-
+        video.addEventListener("error", onError);
         return () => {
             video.removeEventListener("timeupdate", onTimeUpdate);
             video.removeEventListener("loadedmetadata", onLoadMetadata);
@@ -33,6 +35,7 @@ export function useVideoPlayer() {
             video.removeEventListener("pause", onPause);
             video.removeEventListener("ended", onPause);
             video.removeEventListener("volumechange", onVolumeChange);
+            video.removeEventListener("error", onError);
         };
     }, []);
 
@@ -63,6 +66,7 @@ export function useVideoPlayer() {
         togglePlay,
         seek,
         isMuted,
-        toggleMute
+        toggleMute,
+        hasError,
     };
 }

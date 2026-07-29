@@ -1,4 +1,4 @@
-use crate::operations::Trim;
+use crate::operations::{Trim, FfmpegError};
 use std::path::Path;
 
 #[tauri::command]
@@ -7,7 +7,7 @@ pub fn run_trim(
     end: String,
     input: String,
     output: Option<String>,
-) -> Result<String, String> {
+) -> Result<String, FfmpegError> {
     let output = output.unwrap_or_else(|| default_output(&input));
     let trim = Trim { input, output, start, end };
     let ffmpeg = ffmpeg_path();
