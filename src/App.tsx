@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { dirname, join } from "@tauri-apps/api/path";
@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Upload } from "lucide-react";
 import { VideoPlayer } from "./components/VideoPlayer";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 const VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "avi", "webm", "m4v", "wmv", "flv"];
 
@@ -38,8 +39,15 @@ function App() {
   const [endTime, setEndTime] = useState("00:00:10");
   const [loading, setLoading] = useState(false);
   const [showQueue, setShowQueue] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
 
   const queueCount = 0; // TODO: contar vídeos en cola
+
+  const handleSelectVideo = async (filePath: string) => {
+    setInputPath(filePath);
+    const defaultOut = await computeDefaultOutputPath(filePath);
+    setOutputPath(defaultOut);  
+  };
 
   const handlePickInput = async () => {
     const selected = await open({
@@ -48,10 +56,7 @@ function App() {
     });
 
     if (typeof selected === "string") {
-      setInputPath(selected);
-      // Autocompletar la salida por defecto (misma carpeta, sufijo _recortado)
-      const defaultOut = await computeDefaultOutputPath(selected);
-      setOutputPath(defaultOut);
+      await handleSelectVideo(selected);
     }
   };
 
@@ -65,6 +70,42 @@ function App() {
 
     if (selected) setOutputPath(selected);
   };
+
+  // para manejar el arrastrar y soltar archivos en la ventana
+  useEffect(() => {
+    const unlistenPromise = getCurrentWebview().onDragDropEvent((event) => {
+      const type = event.payload.type;
+
+      if (type === "enter" || type === "over") {
+        setIsDragging(true);
+      } 
+      else if (type === "drop") {
+        setIsDragging(false);
+        const paths = event.payload.paths;
+
+        if (paths && paths.length > 0) {
+          // Filtrar y buscar el primer archivo con extensión de vídeo válida
+          const videoFile = paths.find((p) => {
+            const ext = p.split(".").pop()?.toLowerCase();
+            return ext && VIDEO_EXTENSIONS.includes(ext);
+          });
+
+          if (videoFile) {
+            handleSelectVideo(videoFile);
+          } else {
+            toast.error("El archivo no es un vídeo compatible.");
+          }
+        }
+      } 
+      else {
+        setIsDragging(false);
+      }
+    });
+
+    return () => {
+      unlistenPromise.then((unlisten) => unlisten());
+    };
+  }, []);
 
   const handleTrim = async () => {
     if (!inputPath) {
@@ -150,7 +191,19 @@ function App() {
         )}
 
         {/* Zona central */}
-        <main className="flex-1 flex items-center justify-center overflow-y-auto">
+        <main className="relative flex-1 flex items-center justify-center overflow-y-auto">
+          {isDragging && (
+            <div className="absolute inset-4 z-50 flex flex-col items-center justify-center border border-dashed border-primary bg-background/90 backdrop-blur-xs pointer-events-none">
+              <Upload className="size-10 text-primary mb-2" />
+              <p className="text-sm font-medium text-foreground">
+                Suelta el vídeo para editar
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Formatos compatibles: MP4, MOV, MKV, AVI...
+              </p>
+            </div>
+          )}
+          
           {inputPath ? (
             <VideoPlayer key={inputPath} inputPath={inputPath}/>
           ) : (
