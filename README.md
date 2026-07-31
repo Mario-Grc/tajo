@@ -1,7 +1,39 @@
-# Tauri + React + Typescript
+# Tajo
+Simple, lightweight desktop video editor built for quick video trimming. It isn't meant to replace other full-fledged video editing software. There are no complex timelines or heavy effects here.
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Created both as a practical tool for everyday clip editing and as a learning project to explore Rust and [Tauri v2](https://v2.tauri.app/).
 
-## Recommended IDE Setup
+## Status
+Actively in development. Core workflow working:
+- Load a video (file picker or drag and drop)
+- Preview with a built-in player
+- Lossless trim
+- Export to a chosen path
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Stack
+
+<p align="left">
+  <img src="https://cdn.simpleicons.org/tauri" width="40" height="40" title="Tauri v2" />
+  <img src="https://cdn.simpleicons.org/react" width="40" height="40" title="React" />
+  <img src="https://cdn.simpleicons.org/typescript" width="40" height="40" title="TypeScript" />
+  <img src="https://cdn.simpleicons.org/tailwindcss" width="40" height="40" title="Tailwind CSS" />
+  <img src="https://cdn.simpleicons.org/rust" width="40" height="40" title="Rust" />
+  <img src="https://cdn.simpleicons.org/ffmpeg" width="40" height="40" title="FFmpeg" />
+</p>
+
+- [Tauri v2](https://v2.tauri.app/) (web frontend + Rust backend)
+- React + TypeScript + Tailwind CSS v4 + shadcn/ui
+- Rust for the operations engine (building and running ffmpeg commands)
+- ffmpeg as an external process
+
+## Running locally
+
+Requirements:
+ 
+- [Node.js](https://nodejs.org/)
+- [Rust](https://www.rust-lang.org/tools/install)
+- `ffmpeg.exe` binary located in `src-tauri/binaries/`
+```bash
+npm install
+npm run tauri dev
+```
