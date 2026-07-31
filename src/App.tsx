@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { PanelLeftClose, PanelLeftOpen, Upload } from "lucide-react";
 import { VideoPlayer } from "./components/VideoPlayer";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { Header } from "./components/Header";
 
 const VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "avi", "webm", "m4v", "wmv", "flv"];
 
@@ -21,8 +22,6 @@ function truncate(text: string, max = 180) {
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
 
-// A partir de la ruta de entrada, calcula una ruta de salida por defecto.
-// misma carpeta que el original, con sufijo "_recortado"
 async function computeDefaultOutputPath(inputPath: string): Promise<string> {
   const dir = await dirname(inputPath);
   const fullName = inputPath.split(/[\\/]/).pop() ?? "output.mp4";
@@ -145,9 +144,7 @@ function App() {
   return (
     <div className="flex h-screen flex-col bg-background text-foreground select-none">
       {/* Header */}
-      <header className="h-10 flex-shrink-0 flex items-center justify-start border-b border-border px-4">
-
-      </header>
+      <Header />
 
       {/* zona principal con 3 columnas */}
       <div className="flex flex-1 overflow-hidden">
