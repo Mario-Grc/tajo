@@ -285,12 +285,7 @@ function App() {
       </div>
 
       {/* Footer */}
-      <footer className="h-24 flex-shrink-0 border-t border-border p-3">
-        <p className="text-xs text-muted-foreground">
-          {/* TODO: timeline*/}
-          Timeline
-        </p>
-      </footer>
+
 
       <Toaster
         theme="dark"
