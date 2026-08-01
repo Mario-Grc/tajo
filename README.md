@@ -3,6 +3,8 @@ Simple, lightweight desktop video editor built for quick video trimming. It isn'
 
 Created both as a practical tool for everyday clip editing and as a learning project to explore Rust and [Tauri v2](https://v2.tauri.app/).
 
+The app is currently available in Spanish only. English support will be added in a future release.
+
 <img src="main-screenshot.png" alt="main screenshot" width="800"/>
 
 ## Status

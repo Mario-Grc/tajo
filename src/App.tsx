@@ -1,34 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { dirname, join } from "@tauri-apps/api/path";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { PanelLeftClose, PanelLeftOpen, Upload } from "lucide-react";
 import { VideoPlayer } from "./components/VideoPlayer";
-import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { Header } from "./components/Header";
-
-const VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "avi", "webm", "m4v", "wmv", "flv"];
+import { VIDEO_EXTENSIONS, truncate, computeDefaultOutputPath } from "./utils/fileUtils";
+import { useFileDrop } from "./hooks/useFileDrop";
 
 interface FfmpegError {
   summary: string;
   full: string;
-}
-
-function truncate(text: string, max = 180) {
-  return text.length > max ? text.slice(0, max) + "…" : text;
-}
-
-async function computeDefaultOutputPath(inputPath: string): Promise<string> {
-  const dir = await dirname(inputPath);
-  const fullName = inputPath.split(/[\\/]/).pop() ?? "output.mp4";
-  const dotIndex = fullName.lastIndexOf(".");
-  const nameWithoutExt = dotIndex > 0 ? fullName.slice(0, dotIndex) : fullName;
-  const ext = dotIndex > 0 ? fullName.slice(dotIndex) : "";
-  return join(dir, `${nameWithoutExt}_recortado${ext}`);
 }
 
 function App() {
@@ -38,7 +23,6 @@ function App() {
   const [endTime, setEndTime] = useState("00:00:10");
   const [loading, setLoading] = useState(false);
   const [showQueue, setShowQueue] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
 
   const queueCount = 0; // TODO: contar vídeos en cola
 
@@ -71,40 +55,7 @@ function App() {
   };
 
   // para manejar el arrastrar y soltar archivos en la ventana
-  useEffect(() => {
-    const unlistenPromise = getCurrentWebview().onDragDropEvent((event) => {
-      const type = event.payload.type;
-
-      if (type === "enter" || type === "over") {
-        setIsDragging(true);
-      } 
-      else if (type === "drop") {
-        setIsDragging(false);
-        const paths = event.payload.paths;
-
-        if (paths && paths.length > 0) {
-          // Filtrar y buscar el primer archivo con extensión de vídeo válida
-          const videoFile = paths.find((p) => {
-            const ext = p.split(".").pop()?.toLowerCase();
-            return ext && VIDEO_EXTENSIONS.includes(ext);
-          });
-
-          if (videoFile) {
-            handleSelectVideo(videoFile);
-          } else {
-            toast.error("El archivo no es un vídeo compatible.");
-          }
-        }
-      } 
-      else {
-        setIsDragging(false);
-      }
-    });
-
-    return () => {
-      unlistenPromise.then((unlisten) => unlisten());
-    };
-  }, []);
+  const { isDragging } = useFileDrop(handleSelectVideo);
 
   const handleTrim = async () => {
     if (!inputPath) {
