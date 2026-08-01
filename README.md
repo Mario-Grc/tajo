@@ -3,6 +3,8 @@ Simple, lightweight desktop video editor built for quick video trimming. It isn'
 
 Created both as a practical tool for everyday clip editing and as a learning project to explore Rust and [Tauri v2](https://v2.tauri.app/).
 
+<img src="main-screenshot.png" alt="main screenshot" width="800"/>
+
 ## Status
 Actively in development. Core workflow working:
 - Load a video (file picker or drag and drop)
@@ -13,12 +15,12 @@ Actively in development. Core workflow working:
 ## Stack
 
 <p align="left">
-  <img src="https://cdn.simpleicons.org/tauri" width="40" height="40" title="Tauri v2" />
-  <img src="https://cdn.simpleicons.org/react" width="40" height="40" title="React" />
-  <img src="https://cdn.simpleicons.org/typescript" width="40" height="40" title="TypeScript" />
-  <img src="https://cdn.simpleicons.org/tailwindcss" width="40" height="40" title="Tailwind CSS" />
-  <img src="https://cdn.simpleicons.org/rust" width="40" height="40" title="Rust" />
-  <img src="https://cdn.simpleicons.org/ffmpeg" width="40" height="40" title="FFmpeg" />
+  <a href="https://v2.tauri.app/"><img src="https://cdn.simpleicons.org/tauri" width="40" height="40" title="Tauri v2" /></a>&nbsp;&nbsp;
+  <a href="https://react.dev/"><img src="https://cdn.simpleicons.org/react" width="40" height="40" title="React" /></a>&nbsp;&nbsp;
+  <a href="https://www.typescriptlang.org/"><img src="https://cdn.simpleicons.org/typescript" width="40" height="40" title="TypeScript" /></a>&nbsp;&nbsp;
+  <a href="https://tailwindcss.com/"><img src="https://cdn.simpleicons.org/tailwindcss" width="40" height="40" title="Tailwind CSS" /></a>&nbsp;&nbsp;
+  <a href="https://www.rust-lang.org/"><img src="https://cdn.simpleicons.org/rust" width="40" height="40" title="Rust" /></a>&nbsp;&nbsp;
+  <a href="https://ffmpeg.org/"><img src="https://cdn.simpleicons.org/ffmpeg" width="40" height="40" title="FFmpeg" /></a>
 </p>
 
 - [Tauri v2](https://v2.tauri.app/) (web frontend + Rust backend)
