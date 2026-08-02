@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { PanelLeftClose, PanelLeftOpen, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { VideoPlayer } from "./components/VideoPlayer";
 import { Header } from "./components/Header";
 import { VIDEO_EXTENSIONS, truncate, computeDefaultOutputPath } from "./utils/fileUtils";
 import { useFileDrop } from "./hooks/useFileDrop";
+import { QueueSidebar } from "./components/QueueSidebar";
+import { PropertiesSidebar } from "./components/PropertiesSidebar";
 
 interface FfmpegError {
   summary: string;
@@ -22,9 +22,8 @@ function App() {
   const [startTime, setStartTime] = useState("00:00:00");
   const [endTime, setEndTime] = useState("00:00:10");
   const [loading, setLoading] = useState(false);
-  const [showQueue, setShowQueue] = useState(true);
 
-  const queueCount = 0; // TODO: contar vídeos en cola
+  const queueCount = 0; // TODO
 
   const handleSelectVideo = async (filePath: string) => {
     setInputPath(filePath);
@@ -54,7 +53,6 @@ function App() {
     if (selected) setOutputPath(selected);
   };
 
-  // para manejar el arrastrar y soltar archivos en la ventana
   const { isDragging } = useFileDrop(handleSelectVideo);
 
   const handleTrim = async () => {
@@ -97,48 +95,12 @@ function App() {
       {/* Header */}
       <Header />
 
-      {/* zona principal con 3 columnas */}
+      {/* main content with 3 columns */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Panel izquierdo: cola de vídeos */}
-        {showQueue ? (
-          <aside className="w-64 flex-shrink-0 border-r border-border flex flex-col overflow-y-auto">
-            <div className="h-10 flex-shrink-0 flex items-center justify-between border-b border-border px-3">
-              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Cola
-              </h2>
-              <button
-                onClick={() => setShowQueue(false)}
-                className="text-muted-foreground hover:text-foreground"
-                title="Ocultar cola"
-              >
-                <PanelLeftClose className="size-4" />
-              </button>
-            </div>
-            <div className="p-3">
-              <p className="text-xs text-muted-foreground">
-                {/* TODO: cola de vídeos */}
-                Sin vídeos en cola
-              </p>
-            </div>
-          </aside>
-        ) : (
-          <aside className="w-10 flex-shrink-0 border-r border-border flex flex-col items-center pt-2 gap-1">
-            <button
-              onClick={() => setShowQueue(true)}
-              className="text-muted-foreground hover:text-foreground p-1.5"
-              title="Mostrar cola"
-            >
-              <PanelLeftOpen className="size-4" />
-            </button>
-            {queueCount > 0 && (
-              <span className="text-[10px] leading-none bg-secondary text-foreground rounded-full size-4 flex items-center justify-center">
-                {queueCount}
-              </span>
-            )}
-          </aside>
-        )}
+        {/* left panel: video queue */}
+        <QueueSidebar queueCount={queueCount} />
 
-        {/* Zona central */}
+        {/* video panel */}
         <main className="relative flex-1 flex items-center justify-center overflow-y-auto">
           {isDragging && (
             <div className="absolute inset-4 z-50 flex flex-col items-center justify-center border border-dashed border-primary bg-background/90 backdrop-blur-xs pointer-events-none">
@@ -161,82 +123,25 @@ function App() {
           )}
         </main>
 
-        {/* Panel derecho: opciones*/}
-        <aside className="w-72 flex-shrink-0 border-l border-border overflow-y-auto">
-          <div className="p-4 space-y-2 border-b border-border">
-            <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
-              Vídeo de entrada
-            </h2>
-            <div className="space-y-2">
-              <Input
-                value={inputPath}
-                onChange={(e) => setInputPath(e.target.value)}
-                placeholder="Ningún vídeo seleccionado"
-                className="text-xs"
-                title={inputPath}
-              />
-              <Button variant="secondary" size="sm" className="w-full" onClick={handlePickInput}>
-                Seleccionar vídeo
-              </Button>
-            </div>
-          </div>
+        {/* right panel: properties */}
+        <PropertiesSidebar
+          inputPath={inputPath}
+          outputPath={outputPath}
+          startTime={startTime}
+          endTime={endTime}
+          loading={loading}
+          onInputChange={setInputPath}
+          onOutputChange={setOutputPath}
+          onStartTimeChange={setStartTime}
+          onEndTimeChange={setEndTime}
+          onPickInput={handlePickInput}
+          onPickOutput={handlePickOutput}
+          onTrim={handleTrim}
+        />
 
-          <div className="p-4 space-y-2 border-b border-border">
-            <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
-              Guardar como
-            </h2>
-            <div className="space-y-2">
-              <Input
-                value={outputPath}
-                onChange={(e) => setOutputPath(e.target.value)}
-                placeholder="Ningún destino seleccionado"
-                className="text-xs"
-                title={outputPath}
-              />
-              <Button variant="secondary" size="sm" className="w-full" onClick={handlePickOutput}>
-                Elegir destino
-              </Button>
-            </div>
-          </div>
-
-          <div className="p-4 space-y-2 border-b border-border">
-            <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
-              Rango de recorte
-            </h2>
-            <div className="flex gap-2">
-              <div className="flex-1 space-y-1">
-                <label className="text-xs text-muted-foreground">Inicio</label>
-                <Input
-                  type="text"
-                  placeholder="00:00:00"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="font-mono text-xs"
-                />
-              </div>
-              <div className="flex-1 space-y-1">
-                <label className="text-xs text-muted-foreground">Fin</label>
-                <Input
-                  type="text"
-                  placeholder="00:00:10"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="font-mono text-xs"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4">
-            <Button onClick={handleTrim} disabled={loading} className="w-full">
-              {loading ? "Procesando..." : "Recortar Vídeo"}
-            </Button>
-          </div>
-        </aside>
       </div>
 
-      {/* Footer */}
-
+      {/* Footer placeholder... */}
 
       <Toaster
         theme="dark"

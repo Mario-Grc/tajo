@@ -1,0 +1,52 @@
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useState } from "react";
+
+interface QueueSidebarProps {
+  queueCount: number;
+}
+
+export function QueueSidebar({ queueCount }: QueueSidebarProps) {
+  const [showQueue, setShowQueue] = useState(true);
+
+  if (!showQueue) {
+    return (
+      <aside className="w-10 flex-shrink-0 border-r border-border flex flex-col items-center pt-2 gap-1">
+        <button
+          onClick={() => setShowQueue(true)}
+          className="text-muted-foreground hover:text-foreground p-1.5"
+          title="Mostrar cola"
+        >
+          <PanelLeftOpen className="size-4" />
+        </button>
+        {queueCount > 0 && (
+          <span className="text-[10px] leading-none bg-secondary text-foreground rounded-full size-4 flex items-center justify-center">
+            {queueCount}
+          </span>
+        )}
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="w-64 flex-shrink-0 border-r border-border flex flex-col overflow-y-auto">
+      <div className="h-10 flex-shrink-0 flex items-center justify-between border-b border-border px-3">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Cola
+        </h2>
+        <button
+          onClick={() => setShowQueue(false)}
+          className="text-muted-foreground hover:text-foreground"
+          title="Ocultar cola"
+        >
+          <PanelLeftClose className="size-4" />
+        </button>
+      </div>
+      <div className="p-3">
+        <p className="text-xs text-muted-foreground">
+          {/* TODO: queue */}
+          Sin vídeos en cola
+        </p>
+      </div>
+    </aside>
+  );
+}
