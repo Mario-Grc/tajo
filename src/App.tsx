@@ -16,6 +16,10 @@ interface FfmpegError {
   full: string;
 }
 
+interface DeleteError {
+  summary: string;
+}
+
 function App() {
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -90,6 +94,27 @@ function App() {
     }
   };
 
+const handleDeleteVideo = async () => {
+  if (!inputPath) return;
+
+  const pathToDelete = inputPath;
+
+  try {
+    setInputPath("");
+    setStartTime("");
+    setEndTime("");
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await invoke("delete_video", { path: pathToDelete });
+
+    toast.success("Vídeo eliminado correctamente");
+  } catch (err) {
+    const error = err as DeleteError;
+    console.error("Error al borrar el vídeo:", error.summary ?? err);
+    toast.error(error.summary ?? "No se pudo eliminar el vídeo");
+  }
+};
+
   return (
     <div className="flex h-screen flex-col bg-background text-foreground select-none">
       {/* Header */}
@@ -137,6 +162,7 @@ function App() {
           onPickInput={handlePickInput}
           onPickOutput={handlePickOutput}
           onTrim={handleTrim}
+          onDeleteVideo={handleDeleteVideo}
         />
 
       </div>

@@ -8,6 +8,7 @@ export function useVideoPlayer() {
     const [duration, setDuration] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const [volume, setVolume] = useState(1);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -18,7 +19,10 @@ export function useVideoPlayer() {
         const onLoadMetadata = () => setDuration(video.duration);
         const onPlay = () => setIsPlaying(true);
         const onPause = () => setIsPlaying(false);
-        const onVolumeChange = () => setIsMuted(video.muted);
+        const onVolumeChange = () => {
+            setIsMuted(video.muted);
+            setVolume(video.volume);
+        };
         const onError = () => setHasError(true);
 
         video.addEventListener("timeupdate", onTimeUpdate);
@@ -58,6 +62,16 @@ export function useVideoPlayer() {
         video.muted = !video.muted;
     }, []);
 
+    const changeVolume = useCallback((newVolume: number) => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.volume = newVolume;
+
+        if (newVolume > 0 && video.muted) {
+            video.muted = false;
+        }
+    }, []);
+
     return {
         videoRef,
         isPlaying,
@@ -68,5 +82,7 @@ export function useVideoPlayer() {
         isMuted,
         toggleMute,
         hasError,
+        volume,
+        changeVolume,
     };
 }

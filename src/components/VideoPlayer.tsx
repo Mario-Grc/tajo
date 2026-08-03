@@ -16,7 +16,7 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ inputPath }: VideoPlayerProps) {
-  const { videoRef, isPlaying, currentTime, duration, togglePlay, seek, isMuted, toggleMute, hasError } = useVideoPlayer();
+  const { videoRef, isPlaying, currentTime, duration, togglePlay, seek, isMuted, toggleMute, hasError, volume, changeVolume } = useVideoPlayer();
 
   const assetUrl = convertFileSrc(inputPath);
 
@@ -33,39 +33,53 @@ export function VideoPlayer({ inputPath }: VideoPlayerProps) {
       </div>
 
       {!hasError && (
-        <div className="flex w-full max-w-xl mx-auto items-center gap-3 p-3 flex-shrink-0">
-          <button
-            onClick={togglePlay}
-            className="text-foreground hover:text-primary"
-            title={isPlaying ? "Pausar" : "Reproducir"}
-          >
-            {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
-          </button>
-
-          <span className="text-right font-mono text-xs text-muted-foreground">
-            {formatTime(currentTime)}
-          </span>
-
+        <div className="flex w-full mx-auto flex-col gap-2 p-3 flex-shrink-0">
+          {/* row 1 */}
           <Slider
             value={[currentTime]}
             max={duration || 0}
             step={0.1}
             onValueChange={([value]) => seek(value)}
-            className="flex-1"
+            className="w-full"
           />
 
-          <span className="font-mono text-xs text-muted-foreground">
-            {formatTime(duration)}
-          </span>
+          {/* row 2 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={togglePlay}
+                className="text-foreground hover:text-primary"
+                title={isPlaying ? "Pausar" : "Reproducir"}
+              >
+                {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
+              </button>
+            
+              <div className="flex items-center group flex-shrink-0">
+                <button
+                  onClick={toggleMute}
+                  className="text-foreground hover:text-primary flex-shrink-0"
+                  title={isMuted ? "Activar sonido" : "Silenciar"}
+                  >
+                  {isMuted || volume === 0 ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+                </button>
 
-          <button
-            onClick={toggleMute}
-            className="text-foreground hover:text-primary flex-shrink-0"
-            title={isMuted ? "Activar sonido" : "Silenciar"}
-          >
+                <div className="w-0 overflow-hidden opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all duration-200 ease-out flex items-center pr-1">
+                  <Slider
+                    value={[isMuted ? 0 : volume]}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    onValueChange={([val]) => changeVolume(val)}
+                    className="w-20 ml-2"
+                  />
+                </div>
+              </div>
+            </div>
 
-            {isMuted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-          </button>
+            <span className="font-mono text-xs text-muted-foreground flex-shrink-0">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+          </div>
         </div>
       )}
     </div>

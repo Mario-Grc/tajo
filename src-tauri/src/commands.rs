@@ -1,5 +1,18 @@
 use crate::operations::{FfmpegError, Trim};
 use std::path::Path;
+use serde::Serialize;
+
+#[derive(Serialize, Debug)]
+pub struct DeleteError {
+    pub summary: String,
+}
+
+#[tauri::command]
+pub fn delete_video(path: String) -> Result<(), DeleteError> {
+    trash::delete(&path).map_err(|e| DeleteError {
+        summary: format!("No se pudo eliminar el archivo: {e}"),
+    })
+}
 
 #[tauri::command]
 pub fn run_trim(

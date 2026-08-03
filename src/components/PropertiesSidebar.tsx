@@ -1,5 +1,17 @@
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 
 interface PropertiesSidebarProps {
   // state
@@ -19,6 +31,7 @@ interface PropertiesSidebarProps {
   onPickInput: () => void;
   onPickOutput: () => void;
   onTrim: () => void;
+  onDeleteVideo: () => void;
 }
 
 export function PropertiesSidebar({
@@ -34,6 +47,7 @@ export function PropertiesSidebar({
   onPickInput,
   onPickOutput,
   onTrim,
+  onDeleteVideo
 }: PropertiesSidebarProps) {
   return (
     <aside className="w-72 flex-shrink-0 border-l border-border overflow-y-auto">
@@ -52,6 +66,31 @@ export function PropertiesSidebar({
           <Button variant="secondary" size="sm" className="w-full" onClick={onPickInput}>
             Seleccionar vídeo
           </Button>
+          {/* botón para eliminar el vídeo, abre un alertdialog de shadcn*/}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" className="w-full" disabled={!inputPath || loading}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Eliminar Vídeo
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar vídeo?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Se moverá a la papelera del sistema. Podrás recuperarlo desde ahí si cambias de idea.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={onDeleteVideo} 
+                >
+                  Eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
