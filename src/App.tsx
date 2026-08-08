@@ -32,7 +32,7 @@ function App() {
   const handleSelectVideo = async (filePath: string) => {
     setInputPath(filePath);
     const defaultOut = await computeDefaultOutputPath(filePath);
-    setOutputPath(defaultOut);  
+    setOutputPath(defaultOut);
   };
 
   const handlePickInput = async () => {
@@ -94,26 +94,26 @@ function App() {
     }
   };
 
-const handleDeleteVideo = async () => {
-  if (!inputPath) return;
+  const handleDeleteVideo = async () => {
+    if (!inputPath) return;
 
-  const pathToDelete = inputPath;
+    const pathToDelete = inputPath;
 
-  try {
-    setInputPath("");
-    setStartTime("");
-    setEndTime("");
+    try {
+      setInputPath("");
+      setStartTime("");
+      setEndTime("");
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    await invoke("delete_video", { path: pathToDelete });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await invoke("delete_video", { path: pathToDelete });
 
-    toast.success("Vídeo eliminado correctamente");
-  } catch (err) {
-    const error = err as DeleteError;
-    console.error("Error al borrar el vídeo:", error.summary ?? err);
-    toast.error(error.summary ?? "No se pudo eliminar el vídeo");
-  }
-};
+      toast.success("Vídeo eliminado correctamente");
+    } catch (err) {
+      const error = err as DeleteError;
+      console.error("Error al borrar el vídeo:", error.summary ?? err);
+      toast.error(error.summary ?? "No se pudo eliminar el vídeo");
+    }
+  };
 
   return (
     <div className="flex h-screen flex-col bg-background text-foreground select-none">
@@ -138,9 +138,9 @@ const handleDeleteVideo = async () => {
               </p>
             </div>
           )}
-          
+
           {inputPath ? (
-            <VideoPlayer key={inputPath} inputPath={inputPath}/>
+            <VideoPlayer key={inputPath} inputPath={inputPath} />
           ) : (
             <p className="text-sm text-muted-foreground">
               Selecciona un vídeo para comenzar.
