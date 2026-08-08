@@ -1,0 +1,104 @@
+use crate::operations::FfmpegError;
+use crate::binaries::{ffmpeg_path, ffprobe_path};
+use base64::{engine::general_purpose::STANDARD, Engine};
+use serde::Serialize;
+use std::process::Command;
+
+#[derive(Serialize)]
+pub struct VideoInfo {
+    pub duration_sec: f64,
+    pub thumbnail_base64: String,
+}
+
+#[tauri::command]
+pub async fn get_video_info(input_path: String) -> Result<VideoInfo, FfmpegError> {
+    let duration_sec = probe_duration(&input_path)?;
+    let thumbnail_base64 = generate_thumbnail(&input_path)?;
+
+    Ok(VideoInfo {
+        duration_sec,
+        thumbnail_base64,
+    })
+}
+
+fn probe_duration(input_path: &str) -> Result<f64, FfmpegError> {
+    let output = Command::new(ffprobe_path())
+        .args([
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "json",
+            input_path,
+        ])
+        .output()
+        .map_err(|e| FfmpegError {
+            summary: "No se pudo ejecutar ffprobe".to_string(),
+            full: e.to_string(),
+        })?;
+
+    if !output.status.success() {
+        let full = String::from_utf8_lossy(&output.stderr).to_string();
+        let summary = extract_summary(&full, "ffprobe falló sin mensaje de error");
+
+        return Err(FfmpegError { summary, full });
+    }
+
+    let json_str = String::from_utf8_lossy(&output.stdout);
+    let parsed: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| FfmpegError {
+        summary: "No se pudo leer la duración del vídeo".to_string(),
+        full: format!("{e}\nsalida de ffprobe: {json_str}"),
+    })?;
+
+    parsed["format"]["duration"]
+        .as_str()
+        .and_then(|value| value.parse::<f64>().ok())
+        .ok_or_else(|| FfmpegError {
+            summary: "Duración no encontrada en la salida de ffprobe".to_string(),
+            full: json_str.to_string(),
+        })
+}
+
+fn generate_thumbnail(input_path: &str) -> Result<String, FfmpegError> {
+    let output = Command::new(ffmpeg_path())
+        .args([
+            "-ss",
+            "00:00:01",
+            "-i",
+            input_path,
+            "-vframes",
+            "1",
+            "-s",
+            "320x180",
+            "-q:v",
+            "3",
+            "-f",
+            "image2pipe",
+            "-vcodec",
+            "mjpeg",
+            "pipe:1",
+        ])
+        .output()
+        .map_err(|e| FfmpegError {
+            summary: "No se pudo ejecutar ffmpeg".to_string(),
+            full: e.to_string(),
+        })?;
+
+    if !output.status.success() {
+        let full = String::from_utf8_lossy(&output.stderr).to_string();
+        let summary = extract_summary(&full, "ffmpeg falló al generar la miniatura");
+
+        return Err(FfmpegError { summary, full });
+    }
+
+    Ok(STANDARD.encode(&output.stdout))
+}
+
+fn extract_summary(full: &str, fallback: &str) -> String {
+    full.lines()
+        .rev()
+        .find(|line| !line.trim().is_empty())
+        .map(|line| line.to_string())
+        .unwrap_or_else(|| fallback.to_string())
+}

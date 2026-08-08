@@ -1,6 +1,7 @@
 use crate::operations::{FfmpegError, Trim};
 use std::path::Path;
 use serde::Serialize;
+use crate::binaries::ffmpeg_path;
 
 #[derive(Serialize, Debug)]
 pub struct DeleteError {
@@ -30,14 +31,6 @@ pub fn run_trim(
     };
     let ffmpeg = ffmpeg_path();
     trim.run(&ffmpeg)
-}
-
-fn ffmpeg_path() -> String {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("binaries")
-        .join("ffmpeg.exe")
-        .to_string_lossy()
-        .into_owned()
 }
 
 fn default_output(input: &str) -> String {

@@ -1,5 +1,7 @@
 pub mod commands;
 pub mod operations;
+pub mod video_info;
+pub mod binaries;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -13,7 +15,12 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![commands::run_trim, commands::delete_video, greet])
+        .invoke_handler(tauri::generate_handler![
+            commands::run_trim,
+            commands::delete_video,
+            video_info::get_video_info,
+            greet
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
