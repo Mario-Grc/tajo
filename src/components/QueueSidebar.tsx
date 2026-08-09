@@ -34,7 +34,7 @@ export function QueueSidebar({ items, selectedId, onSelect, onRemove }: QueueSid
   }
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-border flex flex-col overflow-y-auto">
+    <aside className="w-64 flex-shrink-0 border-r border-border flex flex-col overflow-hidden">
       <div className="h-10 flex-shrink-0 flex items-center justify-between border-b border-border px-3">
         <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Cola
@@ -47,7 +47,7 @@ export function QueueSidebar({ items, selectedId, onSelect, onRemove }: QueueSid
           <PanelLeftClose className="size-4" />
         </button>
       </div>
-      <div className="flex-1 space-y-2 p-3">
+      <div className="flex-1 space-y-2 overflow-y-auto p-3">
         {items.length === 0 ? (
           <p className="text-xs text-muted-foreground">Sin vídeos en cola</p>
         ) : (

@@ -36,6 +36,26 @@ function formatTimecode(seconds: number | null): string {
   return [hours, minutes, remainingSeconds].map((value) => String(value).padStart(2, "0")).join(":");
 }
 
+function isValidTrimRange(start: number, end: number, durationSec: number | null): string | null {
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return "Los tiempos de inicio y fin deben ser válidos.";
+  }
+
+  if (start < 0 || end < 0) {
+    return "Los tiempos de inicio y fin no pueden ser negativos.";
+  }
+
+  if (start >= end) {
+    return "El tiempo de inicio debe ser menor que el tiempo de fin.";
+  }
+
+  if (durationSec !== null && end > durationSec) {
+    return "El tiempo de fin supera la duración del vídeo.";
+  }
+
+  return null;
+}
+
 function App() {
   const queue = useVideoQueue();
   const selectedItem = queue.selectedItem;
@@ -79,7 +99,7 @@ function App() {
       return;
     }
     if (selectedItem.startTime === null || selectedItem.endTime === null) {
-      toast.error("Marca un rango de inicio y fin.");
+      toast.error("Los tiempos de inicio y fin no pueden estar vacíos.");
       return;
     }
     if (!selectedItem.inputPath) {
@@ -88,6 +108,12 @@ function App() {
     }
     if (!selectedItem.outputPath) {
       toast.error("Elige dónde guardar el resultado.");
+      return;
+    }
+
+    const rangeError = isValidTrimRange(selectedItem.startTime, selectedItem.endTime, selectedItem.durationSec);
+    if (rangeError) {
+      toast.error(rangeError);
       return;
     }
 

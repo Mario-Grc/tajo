@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
 import type { QueueItem } from "../types/queue";
+import { useEffect, useState } from "react";
 
 function formatTimecode(seconds: number | null): string {
   if (seconds === null || !Number.isFinite(seconds)) return "";
@@ -37,6 +38,10 @@ function parseTimecode(value: string): number | null {
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
 
   return null;
+}
+
+function sanitizeTimecodeInput(value: string): string {
+  return value.replace(/[^0-9:]/g, "");
 }
 
 interface PropertiesSidebarProps {
@@ -64,11 +69,25 @@ export function PropertiesSidebar({
   onStartTimeChange,
   onEndTimeChange,
 }: PropertiesSidebarProps) {
+  const hasSelection = item !== null;
+  const [startDraft, setStartDraft] = useState("");
+  const [endDraft, setEndDraft] = useState("");
+
+  useEffect(() => {
+    setStartDraft(formatTimecode(item?.startTime ?? null));
+    setEndDraft(formatTimecode(item?.endTime ?? null));
+  }, [item?.id, item?.startTime, item?.endTime]);
+
+  const commitStartTime = () => {
+    onStartTimeChange(parseTimecode(startDraft));
+  };
+
+  const commitEndTime = () => {
+    onEndTimeChange(parseTimecode(endDraft));
+  };
+
   const inputPath = item?.inputPath ?? "";
   const outputPath = item?.outputPath ?? "";
-  const startTime = formatTimecode(item?.startTime ?? null);
-  const endTime = formatTimecode(item?.endTime ?? null);
-  const hasSelection = item !== null;
 
   return (
     <aside className="w-72 flex-shrink-0 border-l border-border overflow-y-auto">
@@ -145,8 +164,12 @@ export function PropertiesSidebar({
             <Input
               type="text"
               placeholder="00:00:00"
-              value={startTime}
-              onChange={(e) => onStartTimeChange(parseTimecode(e.target.value))}
+              value={startDraft}
+              onChange={(e) => setStartDraft(sanitizeTimecodeInput(e.target.value))}
+              onBlur={commitStartTime}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitStartTime();
+              }}
               className="font-mono text-xs"
               disabled={!hasSelection}
             />
@@ -156,8 +179,12 @@ export function PropertiesSidebar({
             <Input
               type="text"
               placeholder="00:00:10"
-              value={endTime}
-              onChange={(e) => onEndTimeChange(parseTimecode(e.target.value))}
+              value={endDraft}
+              onChange={(e) => setEndDraft(sanitizeTimecodeInput(e.target.value))}
+              onBlur={commitEndTime}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitEndTime();
+              }}
               className="font-mono text-xs"
               disabled={!hasSelection}
             />
