@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { Toaster } from "@/components/ui/sonner";
@@ -26,29 +25,27 @@ interface DeleteError {
   summary: string;
 }
 
+function formatTimecode(seconds: number | null): string {
+  if (seconds === null || !Number.isFinite(seconds)) return "00:00:00";
+
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  return [hours, minutes, remainingSeconds].map((value) => String(value).padStart(2, "0")).join(":");
+}
+
 function App() {
   const queue = useVideoQueue();
-  const [inputPath, setInputPath] = useState("");
-  const [outputPath, setOutputPath] = useState("");
-  const [startTime, setStartTime] = useState("00:00:00");
-  const [endTime, setEndTime] = useState("00:00:10");
-  const [loading, setLoading] = useState(false);
-
-  const queueCount = queue.items.length;
+  const selectedItem = queue.selectedItem;
+  const isProcessing = queue.processingItemId !== null;
 
   const handleAddVideos = async (filePaths: string[]) => {
     if (filePaths.length === 0) return;
 
     const items = await buildQueueItems(filePaths);
     queue.addItems(items);
-
-    const currentItem = items.find((item) => item.status !== "error") ?? items[0];
-    if (currentItem) {
-      setInputPath(currentItem.inputPath);
-      setOutputPath(currentItem.outputPath);
-      setStartTime("00:00:00");
-      setEndTime("00:00:10");
-    }
   };
 
   const handlePickInput = async () => {
@@ -60,39 +57,54 @@ function App() {
   };
 
   const handlePickOutput = async () => {
-    const defaultPath = outputPath || (inputPath ? await computeDefaultOutputPath(inputPath) : undefined);
+    if (!selectedItem) return;
+
+    const defaultPath = selectedItem.outputPath || (selectedItem.inputPath ? await computeDefaultOutputPath(selectedItem.inputPath) : undefined);
 
     const selected = await save({
       defaultPath,
       filters: [{ name: "Vídeo", extensions: ["mp4"] }],
     });
 
-    if (selected) setOutputPath(selected);
+    if (selected) {
+      queue.updateItem(selectedItem.id, { outputPath: selected });
+    }
   };
 
   const { isDragging } = useFileDrop(handleAddVideos);
 
   const handleTrim = async () => {
-    if (!inputPath) {
+    if (!selectedItem) {
       toast.error("Selecciona primero el vídeo de entrada.");
       return;
     }
-    if (!outputPath) {
+    if (selectedItem.startTime === null || selectedItem.endTime === null) {
+      toast.error("Marca un rango de inicio y fin.");
+      return;
+    }
+    if (!selectedItem.inputPath) {
+      toast.error("Selecciona primero el vídeo de entrada.");
+      return;
+    }
+    if (!selectedItem.outputPath) {
       toast.error("Elige dónde guardar el resultado.");
       return;
     }
 
-    setLoading(true);
+    const item = selectedItem;
+    queue.setProcessing(item.id);
+    queue.setStatus(item.id, "processing");
     const toastId = toast.info("Procesando recorte...");
 
     try {
       const result = await invoke<string>("run_trim", {
-        start: startTime,
-        end: endTime,
-        input: inputPath,
-        output: outputPath,
+        start: formatTimecode(item.startTime),
+        end: formatTimecode(item.endTime),
+        input: item.inputPath,
+        output: item.outputPath,
       });
 
+      queue.setStatus(item.id, "completed");
       toast.success(truncate(`Recorte completado. Guardado en: ${result}`), { id: toastId });
     } catch (error) {
       const err = error as FfmpegError;
@@ -101,24 +113,23 @@ function App() {
 
       const errorMessage = err.summary || String(error);
 
+      queue.setStatus(item.id, "error", errorMessage);
+
       toast.error(truncate(errorMessage), { id: toastId });
     } finally {
-      setLoading(false);
+      queue.setProcessing(null);
     }
   };
 
   const handleDeleteVideo = async () => {
-    if (!inputPath) return;
+    if (!selectedItem) return;
 
-    const pathToDelete = inputPath;
+    const item = selectedItem;
 
     try {
-      setInputPath("");
-      setStartTime("");
-      setEndTime("");
-
       await new Promise((resolve) => setTimeout(resolve, 50));
-      await invoke("delete_video", { path: pathToDelete });
+      await invoke("delete_video", { path: item.inputPath });
+      queue.removeItem(item.id);
 
       toast.success("Vídeo eliminado correctamente");
     } catch (err) {
@@ -136,7 +147,12 @@ function App() {
       {/* main content with 3 columns */}
       <div className="flex flex-1 overflow-hidden">
         {/* left panel: video queue */}
-          <QueueSidebar queueCount={queueCount} />
+        <QueueSidebar
+          items={queue.items}
+          selectedId={queue.selectedId}
+          onSelect={queue.selectItem}
+          onRemove={queue.removeItem}
+        />
 
         {/* video panel */}
         <main className="relative flex-1 flex items-center justify-center overflow-y-auto">
@@ -152,8 +168,8 @@ function App() {
             </div>
           )}
 
-          {inputPath ? (
-            <VideoPlayer key={inputPath} inputPath={inputPath} />
+          {selectedItem ? (
+            <VideoPlayer key={selectedItem.inputPath} inputPath={selectedItem.inputPath} />
           ) : (
             <p className="text-sm text-muted-foreground">
               Selecciona un vídeo para comenzar.
@@ -163,15 +179,24 @@ function App() {
 
         {/* right panel: properties */}
         <PropertiesSidebar
-          inputPath={inputPath}
-          outputPath={outputPath}
-          startTime={startTime}
-          endTime={endTime}
-          loading={loading}
-          onInputChange={setInputPath}
-          onOutputChange={setOutputPath}
-          onStartTimeChange={setStartTime}
-          onEndTimeChange={setEndTime}
+          item={selectedItem}
+          isProcessing={isProcessing}
+          onInputChange={(path) => {
+            if (!selectedItem) return;
+            queue.updateItem(selectedItem.id, { inputPath: path });
+          }}
+          onOutputChange={(path) => {
+            if (!selectedItem) return;
+            queue.updateItem(selectedItem.id, { outputPath: path });
+          }}
+          onStartTimeChange={(time) => {
+            if (!selectedItem) return;
+            queue.updateItem(selectedItem.id, { startTime: time });
+          }}
+          onEndTimeChange={(time) => {
+            if (!selectedItem) return;
+            queue.updateItem(selectedItem.id, { endTime: time });
+          }}
           onPickInput={handlePickInput}
           onPickOutput={handlePickOutput}
           onTrim={handleTrim}

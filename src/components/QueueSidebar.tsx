@@ -1,12 +1,18 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
+import type { QueueItem } from "../types/queue";
+import { QueueCard } from "./QueueCard";
 
 interface QueueSidebarProps {
-  queueCount: number;
+  items: QueueItem[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onRemove: (id: string) => void;
 }
 
-export function QueueSidebar({ queueCount }: QueueSidebarProps) {
+export function QueueSidebar({ items, selectedId, onSelect, onRemove }: QueueSidebarProps) {
   const [showQueue, setShowQueue] = useState(true);
+  const queueCount = items.length;
 
   if (!showQueue) {
     return (
@@ -41,11 +47,20 @@ export function QueueSidebar({ queueCount }: QueueSidebarProps) {
           <PanelLeftClose className="size-4" />
         </button>
       </div>
-      <div className="p-3">
-        <p className="text-xs text-muted-foreground">
-          {/* TODO: queue */}
-          Sin vídeos en cola
-        </p>
+      <div className="flex-1 space-y-2 p-3">
+        {items.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Sin vídeos en cola</p>
+        ) : (
+          items.map((item) => (
+            <QueueCard
+              key={item.id}
+              item={item}
+              isSelected={item.id === selectedId}
+              onSelect={onSelect}
+              onRemove={onRemove}
+            />
+          ))
+        )}
       </div>
     </aside>
   );

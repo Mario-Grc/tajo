@@ -12,43 +12,64 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import type { QueueItem } from "../types/queue";
+
+function formatTimecode(seconds: number | null): string {
+  if (seconds === null || !Number.isFinite(seconds)) return "";
+
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  return [hours, minutes, remainingSeconds].map((value) => String(value).padStart(2, "0")).join(":");
+}
+
+function parseTimecode(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const parts = trimmed.split(":").map((part) => Number(part));
+  if (parts.some((part) => Number.isNaN(part))) return null;
+
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+
+  return null;
+}
 
 interface PropertiesSidebarProps {
-  // state
-  inputPath: string;
-  outputPath: string;
-  startTime: string;
-  endTime: string;
-  loading: boolean;
-
-  // Handlers for text input changes
-  onInputChange: (path: string) => void;
-  onOutputChange: (path: string) => void;
-  onStartTimeChange: (time: string) => void;
-  onEndTimeChange: (time: string) => void;
-
-  // button handlers
+  item: QueueItem | null;
+  isProcessing: boolean;
   onPickInput: () => void;
   onPickOutput: () => void;
   onTrim: () => void;
   onDeleteVideo: () => void;
+  onInputChange: (path: string) => void;
+  onOutputChange: (path: string) => void;
+  onStartTimeChange: (time: number | null) => void;
+  onEndTimeChange: (time: number | null) => void;
 }
 
 export function PropertiesSidebar({
-  inputPath,
-  outputPath,
-  startTime,
-  endTime,
-  loading,
+  item,
+  isProcessing,
+  onPickInput,
+  onPickOutput,
+  onTrim,
+  onDeleteVideo,
   onInputChange,
   onOutputChange,
   onStartTimeChange,
   onEndTimeChange,
-  onPickInput,
-  onPickOutput,
-  onTrim,
-  onDeleteVideo
 }: PropertiesSidebarProps) {
+  const inputPath = item?.inputPath ?? "";
+  const outputPath = item?.outputPath ?? "";
+  const startTime = formatTimecode(item?.startTime ?? null);
+  const endTime = formatTimecode(item?.endTime ?? null);
+  const hasSelection = item !== null;
+
   return (
     <aside className="w-72 flex-shrink-0 border-l border-border overflow-y-auto">
       <div className="p-4 space-y-2 border-b border-border">
@@ -62,6 +83,7 @@ export function PropertiesSidebar({
             placeholder="Ningún vídeo seleccionado"
             className="text-xs"
             title={inputPath}
+            disabled={!hasSelection}
           />
           <Button variant="secondary" size="sm" className="w-full" onClick={onPickInput}>
             Seleccionar vídeo
@@ -69,7 +91,7 @@ export function PropertiesSidebar({
           {/* botón para eliminar el vídeo, abre un alertdialog de shadcn*/}
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" className="w-full" disabled={!inputPath || loading}>
+              <Button variant="destructive" size="sm" className="w-full" disabled={!hasSelection || isProcessing}>
                 <Trash2 className="w-4 h-4 mr-2" />
                 Eliminar Vídeo
               </Button>
@@ -105,6 +127,7 @@ export function PropertiesSidebar({
             placeholder="Ningún destino seleccionado"
             className="text-xs"
             title={outputPath}
+            disabled={!hasSelection}
           />
           <Button variant="secondary" size="sm" className="w-full" onClick={onPickOutput}>
             Elegir destino
@@ -123,8 +146,9 @@ export function PropertiesSidebar({
               type="text"
               placeholder="00:00:00"
               value={startTime}
-              onChange={(e) => onStartTimeChange(e.target.value)}
+              onChange={(e) => onStartTimeChange(parseTimecode(e.target.value))}
               className="font-mono text-xs"
+              disabled={!hasSelection}
             />
           </div>
           <div className="flex-1 space-y-1">
@@ -133,16 +157,17 @@ export function PropertiesSidebar({
               type="text"
               placeholder="00:00:10"
               value={endTime}
-              onChange={(e) => onEndTimeChange(e.target.value)}
+              onChange={(e) => onEndTimeChange(parseTimecode(e.target.value))}
               className="font-mono text-xs"
+              disabled={!hasSelection}
             />
           </div>
         </div>
       </div>
 
       <div className="p-4">
-        <Button onClick={onTrim} disabled={loading} className="w-full">
-          {loading ? "Procesando..." : "Recortar Vídeo"}
+        <Button onClick={onTrim} disabled={!hasSelection || isProcessing} className="w-full">
+          {isProcessing ? "Procesando..." : "Recortar Vídeo"}
         </Button>
       </div>
     </aside>
