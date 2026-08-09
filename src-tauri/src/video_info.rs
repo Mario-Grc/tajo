@@ -5,6 +5,7 @@ use serde::Serialize;
 use std::process::Command;
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VideoInfo {
     pub duration_sec: f64,
     pub thumbnail_base64: String,

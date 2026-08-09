@@ -1,15 +1,21 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { open, save } from "@tauri-apps/plugin-dialog";
+import { save } from "@tauri-apps/plugin-dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { VideoPlayer } from "./components/VideoPlayer";
 import { Header } from "./components/Header";
-import { VIDEO_EXTENSIONS, truncate, computeDefaultOutputPath } from "./utils/fileUtils";
+import {
+  truncate,
+  computeDefaultOutputPath,
+  buildQueueItems,
+  pickVideos,
+} from "./utils/fileUtils";
 import { useFileDrop } from "./hooks/useFileDrop";
 import { QueueSidebar } from "./components/QueueSidebar";
 import { PropertiesSidebar } from "./components/PropertiesSidebar";
+import { useVideoQueue } from "./hooks/useVideoQueue";
 
 interface FfmpegError {
   summary: string;
@@ -21,28 +27,35 @@ interface DeleteError {
 }
 
 function App() {
+  const queue = useVideoQueue();
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
   const [startTime, setStartTime] = useState("00:00:00");
   const [endTime, setEndTime] = useState("00:00:10");
   const [loading, setLoading] = useState(false);
 
-  const queueCount = 0; // TODO
+  const queueCount = queue.items.length;
 
-  const handleSelectVideo = async (filePath: string) => {
-    setInputPath(filePath);
-    const defaultOut = await computeDefaultOutputPath(filePath);
-    setOutputPath(defaultOut);
+  const handleAddVideos = async (filePaths: string[]) => {
+    if (filePaths.length === 0) return;
+
+    const items = await buildQueueItems(filePaths);
+    queue.addItems(items);
+
+    const currentItem = items.find((item) => item.status !== "error") ?? items[0];
+    if (currentItem) {
+      setInputPath(currentItem.inputPath);
+      setOutputPath(currentItem.outputPath);
+      setStartTime("00:00:00");
+      setEndTime("00:00:10");
+    }
   };
 
   const handlePickInput = async () => {
-    const selected = await open({
-      multiple: false,
-      filters: [{ name: "Vídeos", extensions: VIDEO_EXTENSIONS }],
-    });
+    const selected = await pickVideos();
 
-    if (typeof selected === "string") {
-      await handleSelectVideo(selected);
+    if (selected.length > 0) {
+      await handleAddVideos(selected);
     }
   };
 
@@ -57,7 +70,7 @@ function App() {
     if (selected) setOutputPath(selected);
   };
 
-  const { isDragging } = useFileDrop(handleSelectVideo);
+  const { isDragging } = useFileDrop(handleAddVideos);
 
   const handleTrim = async () => {
     if (!inputPath) {
@@ -123,7 +136,7 @@ function App() {
       {/* main content with 3 columns */}
       <div className="flex flex-1 overflow-hidden">
         {/* left panel: video queue */}
-        <QueueSidebar queueCount={queueCount} />
+          <QueueSidebar queueCount={queueCount} />
 
         {/* video panel */}
         <main className="relative flex-1 flex items-center justify-center overflow-y-auto">
