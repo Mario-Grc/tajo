@@ -1,17 +1,15 @@
-use std::path::Path;
+use tauri::AppHandle;
+use tauri_plugin_shell::process::Command;
+use tauri_plugin_shell::ShellExt;
 
-pub fn ffmpeg_path() -> String {
-    binary_path("ffmpeg.exe")
+pub fn ffmpeg_command(app: &AppHandle) -> Command {
+    app.shell()
+        .sidecar("ffmpeg")
+        .expect("no se pudo crear el comando sidecar de ffmpeg")
 }
 
-pub fn ffprobe_path() -> String {
-    binary_path("ffprobe.exe")
-}
-
-fn binary_path(binary_name: &str) -> String {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("binaries")
-        .join(binary_name)
-        .to_string_lossy()
-        .into_owned()
+pub fn ffprobe_command(app: &AppHandle) -> Command {
+    app.shell()
+        .sidecar("ffprobe")
+        .expect("no se pudo crear el comando sidecar de ffprobe")
 }

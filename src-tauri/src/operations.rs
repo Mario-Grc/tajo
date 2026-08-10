@@ -1,7 +1,7 @@
 //! Operaciones del motor del editor
 
 use serde::Serialize;
-use std::process::Command;
+use tauri_plugin_shell::process::Command;
 
 /// Estructura para los errores que se enviarán al front
 #[derive(Serialize, Debug)]
@@ -36,10 +36,11 @@ impl Trim {
     }
 
     /// lanzar ffmpeg y ejecutar el recorte
-    pub fn run(&self, ffmpeg: &str) -> Result<String, FfmpegError> {
-        let result = Command::new(ffmpeg)
+    pub async fn run(&self, ffmpeg: Command) -> Result<String, FfmpegError> {
+        let result = ffmpeg
             .args(self.build_args())
             .output()
+            .await
             .map_err(|e| FfmpegError {
                 summary: format!("no se pudo lanzar ffmpeg: {e}"),
                 full: e.to_string(),

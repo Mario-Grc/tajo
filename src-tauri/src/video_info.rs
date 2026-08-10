@@ -1,8 +1,9 @@
+use crate::binaries::{ffmpeg_command, ffprobe_command};
 use crate::operations::FfmpegError;
-use crate::binaries::{ffmpeg_path, ffprobe_path};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::Serialize;
-use std::process::Command;
+use tauri::AppHandle;
+use tauri_plugin_shell::process::CommandEvent;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -12,9 +13,9 @@ pub struct VideoInfo {
 }
 
 #[tauri::command]
-pub async fn get_video_info(input_path: String) -> Result<VideoInfo, FfmpegError> {
-    let duration_sec = probe_duration(&input_path)?;
-    let thumbnail_base64 = generate_thumbnail(&input_path)?;
+pub async fn get_video_info(app: AppHandle, input_path: String) -> Result<VideoInfo, FfmpegError> {
+    let duration_sec = probe_duration(&app, &input_path).await?;
+    let thumbnail_base64 = generate_thumbnail(&app, &input_path).await?;
 
     Ok(VideoInfo {
         duration_sec,
@@ -22,8 +23,8 @@ pub async fn get_video_info(input_path: String) -> Result<VideoInfo, FfmpegError
     })
 }
 
-fn probe_duration(input_path: &str) -> Result<f64, FfmpegError> {
-    let output = Command::new(ffprobe_path())
+async fn probe_duration(app: &AppHandle, input_path: &str) -> Result<f64, FfmpegError> {
+    let output = ffprobe_command(app)
         .args([
             "-v",
             "error",
@@ -34,6 +35,7 @@ fn probe_duration(input_path: &str) -> Result<f64, FfmpegError> {
             input_path,
         ])
         .output()
+        .await
         .map_err(|e| FfmpegError {
             summary: "No se pudo ejecutar ffprobe".to_string(),
             full: e.to_string(),
@@ -61,8 +63,8 @@ fn probe_duration(input_path: &str) -> Result<f64, FfmpegError> {
         })
 }
 
-fn generate_thumbnail(input_path: &str) -> Result<String, FfmpegError> {
-    let output = Command::new(ffmpeg_path())
+async fn generate_thumbnail(app: &AppHandle, input_path: &str) -> Result<String, FfmpegError> {
+    let (mut rx, _child) = ffmpeg_command(app)
         .args([
             "-ss",
             "00:00:01",
@@ -80,20 +82,38 @@ fn generate_thumbnail(input_path: &str) -> Result<String, FfmpegError> {
             "mjpeg",
             "pipe:1",
         ])
-        .output()
+        .spawn()
         .map_err(|e| FfmpegError {
             summary: "No se pudo ejecutar ffmpeg".to_string(),
             full: e.to_string(),
         })?;
 
-    if !output.status.success() {
-        let full = String::from_utf8_lossy(&output.stderr).to_string();
-        let summary = extract_summary(&full, "ffmpeg falló al generar la miniatura");
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let mut exit_code = None;
 
-        return Err(FfmpegError { summary, full });
+    while let Some(event) = rx.recv().await {
+        match event {
+            CommandEvent::Stdout(chunk) => stdout.extend(chunk),
+            CommandEvent::Stderr(chunk) => stderr.extend(chunk),
+            CommandEvent::Terminated(payload) => exit_code = payload.code,
+            CommandEvent::Error(err) => {
+                return Err(FfmpegError {
+                    summary: "Error al ejecutar ffmpeg".to_string(),
+                    full: err,
+                });
+            }
+            _ => {}
+        }
     }
 
-    Ok(STANDARD.encode(&output.stdout))
+    if exit_code == Some(0) {
+        Ok(STANDARD.encode(&stdout))
+    } else {
+        let full = String::from_utf8_lossy(&stderr).to_string();
+        let summary = extract_summary(&full, "ffmpeg falló al generar la miniatura");
+        Err(FfmpegError { summary, full })
+    }
 }
 
 fn extract_summary(full: &str, fallback: &str) -> String {

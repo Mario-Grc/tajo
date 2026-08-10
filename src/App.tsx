@@ -15,6 +15,7 @@ import { useFileDrop } from "./hooks/useFileDrop";
 import { QueueSidebar } from "./components/QueueSidebar";
 import { PropertiesSidebar } from "./components/PropertiesSidebar";
 import { useVideoQueue } from "./hooks/useVideoQueue";
+import "sonner/dist/styles.css";
 
 interface FfmpegError {
   summary: string;

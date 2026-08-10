@@ -1,7 +1,7 @@
+use crate::binaries::ffmpeg_command;
 use crate::operations::{FfmpegError, Trim};
-use std::path::Path;
 use serde::Serialize;
-use crate::binaries::ffmpeg_path;
+use std::path::Path;
 
 #[derive(Serialize, Debug)]
 pub struct DeleteError {
@@ -16,7 +16,8 @@ pub fn delete_video(path: String) -> Result<(), DeleteError> {
 }
 
 #[tauri::command]
-pub fn run_trim(
+pub async fn run_trim(
+    app: tauri::AppHandle,
     start: String,
     end: String,
     input: String,
@@ -29,8 +30,8 @@ pub fn run_trim(
         start,
         end,
     };
-    let ffmpeg = ffmpeg_path();
-    trim.run(&ffmpeg)
+    let ffmpeg = ffmpeg_command(&app);
+    trim.run(ffmpeg).await
 }
 
 fn default_output(input: &str) -> String {
