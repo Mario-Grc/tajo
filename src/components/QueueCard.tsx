@@ -32,37 +32,46 @@ export function QueueCard({ item, isSelected, onSelect, onRemove }: QueueCardPro
     <div
       onClick={() => onSelect(item.id)}
       className={cn(
-        "flex cursor-pointer items-center gap-3 border p-2 transition-colors",
-        isSelected ? "border-primary bg-primary/10" : "border-border bg-background hover:bg-muted/40"
+        "group relative cursor-pointer overflow-hidden border bg-background transition-all duration-200",
+        isSelected
+          ? "border-primary"
+          : "border-border hover:border-muted-foreground hover:bg-muted/20"
       )}
     >
-      <div className="flex h-12 w-20 flex-shrink-0 overflow-hidden bg-muted">
+      <div className="relative aspect-video w-full overflow-hidden bg-muted">
         {item.thumbnailUrl ? (
-          <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+          <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-wide text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center bg-muted text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             Sin miniatura
           </div>
         )}
-      </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm text-foreground">{item.fileName}</p>
-        <p className="font-mono text-xs text-muted-foreground">{formatDuration(item.durationSec)}</p>
-        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{STATUS_LABEL[item.status]}</p>
-      </div>
+        <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-background via-background/90 to-transparent" />
 
-      <button
-        onClick={(event) => {
-          event.stopPropagation();
-          onRemove(item.id);
-        }}
-        className="text-muted-foreground hover:text-destructive"
-        aria-label="Eliminar de la cola"
-        title="Eliminar de la cola"
-      >
-        <X className="size-4" />
-      </button>
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove(item.id);
+          }}
+          className="absolute right-2 top-2 flex size-6 items-center justify-center border border-border bg-background/50 text-muted-foreground opacity-0 backdrop-blur-sm transition-all hover:border-destructive/60 hover:text-destructive group-hover:opacity-100"
+          aria-label="Eliminar de la cola"
+          title="Eliminar de la cola"
+        >
+          <X className="size-4" />
+        </button>
+
+        <div className="absolute inset-x-0 bottom-0 p-3">
+          <p className="truncate text-sm font-medium text-foreground">
+            {item.fileName}
+          </p>
+
+          <div className="mt-1 flex justify-between gap-2 font-mono text-[11px] text-muted-foreground">
+            <span>{formatDuration(item.durationSec)}</span>
+            <span>{STATUS_LABEL[item.status]}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
