@@ -3,7 +3,8 @@ Simple, lightweight desktop video editor built for quick video trimming. It isn'
 
 Created both as a practical tool for everyday clip editing and as a learning project to explore Rust and [Tauri v2](https://v2.tauri.app/).
 
-The app is currently available in Spanish only. English support will be added in a future release.
+> [!NOTE]
+> The app is currently available in Spanish only. English support will be added in a future release.
 
 <img src="main-screenshot.png" alt="main screenshot" width="800"/>
 
@@ -28,16 +29,31 @@ Actively in development. Core workflow working:
 - [Tauri v2](https://v2.tauri.app/) (web frontend + Rust backend)
 - React + TypeScript + Tailwind CSS v4 + shadcn/ui
 - Rust for the operations engine (building and running ffmpeg commands)
-- ffmpeg as an external process
+- ffmpeg and ffprobe as external processes
 
 ## Running locally
 
-Requirements:
- 
-- [Node.js](https://nodejs.org/)
-- [Rust](https://www.rust-lang.org/tools/install)
-- `ffmpeg.exe` binary located in `src-tauri/binaries/`
-```bash
-npm install
-npm run tauri dev
-```
+### Requirements:
+
+- System dependencies: Make sure you have the required build tools for your OS installed (see [Tauri Prerequisites](https://v2.tauri.app/start/prerequisites/)).
+- [Node.js](https://nodejs.org/).
+- [pnpm](https://pnpm.io/installation) is optional, but it’s the package manager used during development.
+- [Rust](https://www.rust-lang.org/tools/install).
+- `ffmpeg` and `ffprobe` binaries. Download standard static builds for your operating system.
+
+### Setup:
+Tauri v2 uses Sidecars to bundle external binaries like `ffmpeg` and `ffprobe`. To run the project, the binaries in `src-tauri/binaries/` must include your target triple in their filename.
+
+1. Find your Rust host triple by running:
+   ```bash
+   rustc --print host-tuple
+   ```
+2. Rename the binaries to match your host triple and move them to `src-tauri/binaries/`. For example, if your host triple is `x86_64-pc-windows-msvc`, rename the binaries to `ffmpeg-x86_64-pc-windows-msvc.exe` and `ffprobe-x86_64-pc-windows-msvc.exe`.
+
+3. Install dependencies and run the app:
+    ```bash
+    pnpm install
+    pnpm tauri dev
+    # if you want the production build, run:
+    # pnpm tauri build
+    ```
