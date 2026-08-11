@@ -36,7 +36,7 @@ export function QueueSidebar({ items, selectedId, onSelect, onRemove }: QueueSid
   return (
     <aside className="w-64 flex-shrink-0 border-r border-border flex flex-col overflow-hidden">
       <div className="h-10 flex-shrink-0 flex items-center justify-between border-b border-border px-3">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-sm tracking-wide text-muted-foreground">
           Cola
         </h2>
         <button
@@ -47,9 +47,9 @@ export function QueueSidebar({ items, selectedId, onSelect, onRemove }: QueueSid
           <PanelLeftClose className="size-4" />
         </button>
       </div>
-      <div className="flex-1 space-y-2 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto">
         {items.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Sin vídeos en cola</p>
+          <p className="text-xs text-muted-foreground m-3">Sin vídeos en cola.</p>
         ) : (
           items.map((item) => (
             <QueueCard

@@ -92,7 +92,7 @@ export function PropertiesSidebar({
   return (
     <aside className="w-72 flex-shrink-0 border-l border-border overflow-y-auto">
       <div className="p-4 space-y-2 border-b border-border">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
+        <h2 className="text-sm tracking-wide text-muted-foreground mb-2">
           Vídeo de entrada
         </h2>
         <div className="space-y-2">
@@ -136,7 +136,7 @@ export function PropertiesSidebar({
       </div>
 
       <div className="p-4 space-y-2 border-b border-border">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
+        <h2 className="text-sm tracking-wide text-muted-foreground mb-2">
           Guardar como
         </h2>
         <div className="space-y-2">
@@ -155,7 +155,7 @@ export function PropertiesSidebar({
       </div>
 
       <div className="p-4 space-y-2 border-b border-border">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
+        <h2 className="text-sm tracking-wide text-muted-foreground mb-2">
           Rango de recorte
         </h2>
         <div className="flex gap-2">

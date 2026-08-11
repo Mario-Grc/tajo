@@ -12,7 +12,7 @@ Created both as a practical tool for everyday clip editing and as a learning pro
 Actively in development. Core workflow working:
 - Load a video (file picker or drag and drop)
 - Preview with a built-in player
-- Lossless trim
+- Trim
 - Export to a chosen path
 
 ## Stack

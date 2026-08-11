@@ -63,7 +63,7 @@ export function VideoPlayer({ inputPath }: VideoPlayerProps) {
                   {isMuted || volume === 0 ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
                 </button>
 
-                <div className="w-0 overflow-hidden opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all duration-200 ease-out flex items-center pr-1">
+                <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all duration-200 ease-out flex items-center pr-1">
                   <Slider
                     value={[isMuted ? 0 : volume]}
                     min={0}

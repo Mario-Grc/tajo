@@ -43,7 +43,7 @@ export function QueueCard({ item, isSelected, onSelect, onRemove }: QueueCardPro
           <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-muted text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Sin miniatura
+            Sin miniatura.
           </div>
         )}
 
