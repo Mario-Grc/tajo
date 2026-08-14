@@ -81,8 +81,16 @@ mod tests {
         assert_eq!(
             args.iter().map(String::as_str).collect::<Vec<_>>(),
             vec![
-                "-ss", "00:01:00", "-to", "00:02:30", "-i", "input.mp4",
-                "-c", "copy", "-y", "output.mp4",
+                "-ss",
+                "00:01:00",
+                "-to",
+                "00:02:30",
+                "-i",
+                "input.mp4",
+                "-c",
+                "copy",
+                "-y",
+                "output.mp4",
             ]
         );
     }
