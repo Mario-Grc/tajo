@@ -62,3 +62,43 @@ impl Trim {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trim_build_args_lossless_copy() {
+        let trim = Trim {
+            input: "input.mp4".to_string(),
+            output: "output.mp4".to_string(),
+            start: "00:01:00".to_string(),
+            end: "00:02:30".to_string(),
+        };
+
+        let args = trim.build_args();
+
+        assert_eq!(
+            args.iter().map(String::as_str).collect::<Vec<_>>(),
+            vec![
+                "-ss", "00:01:00", "-to", "00:02:30", "-i", "input.mp4",
+                "-c", "copy", "-y", "output.mp4",
+            ]
+        );
+    }
+
+    #[test]
+    fn trim_build_args_preserves_paths_with_spaces() {
+        let trim = Trim {
+            input: "my clips/input video.mp4".to_string(),
+            output: "output/final cut.mp4".to_string(),
+            start: "00:00:00".to_string(),
+            end: "00:00:10".to_string(),
+        };
+
+        let args = trim.build_args();
+
+        assert!(args.contains(&"my clips/input video.mp4".to_string()));
+        assert!(args.contains(&"output/final cut.mp4".to_string()));
+    }
+}

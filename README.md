@@ -9,7 +9,8 @@ Created both as a practical tool for everyday clip editing and as a learning pro
 <img src="main-screenshot.png" alt="main screenshot" width="800"/>
 
 ## Status
-Actively in development. Core workflow working:
+
+This project is actively in development. Main features right now include:
 - Load a video (file picker or drag and drop)
 - Preview with a built-in player
 - Trim
