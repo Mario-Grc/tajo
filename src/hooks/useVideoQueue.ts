@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useMemo } from 'react';
+import { useReducer, useCallback, useMemo, useState } from 'react';
 import type { QueueItem, QueueItemStatus } from '../types/queue';
 
 interface QueueState {
@@ -70,6 +70,7 @@ function queueReducer(state: QueueState, action: QueueAction): QueueState {
 
 export function useVideoQueue() {
   const [state, dispatch] = useReducer(queueReducer, initialState);
+  const [isAddingFiles, setIsAddingFiles] = useState(false);
 
   const selectedItem = useMemo(
     () => state.items.find((item) => item.id === state.selectedId) ?? null,
@@ -107,5 +108,7 @@ export function useVideoQueue() {
     updateItem,
     setStatus,
     setProcessing,
+    isAddingFiles,
+    setIsAddingFiles,
   };
 }

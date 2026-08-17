@@ -65,8 +65,16 @@ function App() {
   const handleAddVideos = async (filePaths: string[]) => {
     if (filePaths.length === 0) return;
 
-    const items = await buildQueueItems(filePaths);
-    queue.addItems(items);
+    queue.setIsAddingFiles(true);
+    try {
+      const items = await buildQueueItems(filePaths);
+      queue.addItems(items);
+    } catch (error) {
+      console.error("Error al obtener metadatos de los vídeos:", error);
+      toast.error("Error al cargar los vídeos");
+    } finally {
+      queue.setIsAddingFiles(false);
+    }
   };
 
   const handlePickInput = async () => {
@@ -179,12 +187,13 @@ function App() {
           selectedId={queue.selectedId}
           onSelect={queue.selectItem}
           onRemove={queue.removeItem}
+          isAddingFiles={queue.isAddingFiles}
         />
 
         {/* video panel */}
         <main className="relative flex-1 flex items-center justify-center overflow-y-auto">
           {isDragging && (
-            <div className="absolute inset-4 z-50 flex flex-col items-center justify-center border border-dashed border-primary bg-background/90 backdrop-blur-xs pointer-events-none">
+            <div className="absolute inset-4 z-50 flex flex-col items-center justify-center border border-dashed border-primary bg-background/80 backdrop-blur-xs pointer-events-none">
               <Upload className="size-10 text-primary mb-2" />
               <p className="text-sm font-medium text-foreground">
                 Suelta el vídeo para editar

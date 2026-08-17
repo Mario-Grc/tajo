@@ -1,4 +1,4 @@
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
 import type { QueueItem } from "../types/queue";
 import { QueueCard } from "./QueueCard";
@@ -6,11 +6,12 @@ import { QueueCard } from "./QueueCard";
 interface QueueSidebarProps {
   items: QueueItem[];
   selectedId: string | null;
+  isAddingFiles: boolean;
   onSelect: (id: string) => void;
   onRemove: (id: string) => void;
 }
 
-export function QueueSidebar({ items, selectedId, onSelect, onRemove }: QueueSidebarProps) {
+export function QueueSidebar({ items, selectedId, isAddingFiles, onSelect, onRemove }: QueueSidebarProps) {
   const [showQueue, setShowQueue] = useState(true);
   const queueCount = items.length;
 
@@ -47,19 +48,27 @@ export function QueueSidebar({ items, selectedId, onSelect, onRemove }: QueueSid
           <PanelLeftClose className="size-4" />
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        {items.length === 0 ? (
-          <p className="text-xs text-muted-foreground m-3">Sin vídeos en cola.</p>
-        ) : (
-          items.map((item) => (
-            <QueueCard
-              key={item.id}
-              item={item}
-              isSelected={item.id === selectedId}
-              onSelect={onSelect}
-              onRemove={onRemove}
-            />
-          ))
+      <div className="relative flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto">
+          {items.length === 0 ? (
+            <p className="text-sm text-muted-foreground m-3">Sin vídeos en cola.</p>
+          ) : (
+            items.map((item) => (
+              <QueueCard
+                key={item.id}
+                item={item}
+                isSelected={item.id === selectedId}
+                onSelect={onSelect}
+                onRemove={onRemove}
+              />
+            ))
+          )}
+        </div>
+
+        {isAddingFiles && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/80 backdrop-blur-xs">
+            <Loader2 className="size-10 animate-spin" />
+          </div>
         )}
       </div>
     </aside>

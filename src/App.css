@@ -141,7 +141,7 @@
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
   height: 10px;
 }
 
@@ -151,8 +151,6 @@
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--border);
-  border-radius: var(--radius);
-  border: 2px solid transparent;
   background-clip: padding-box;
 }
 
