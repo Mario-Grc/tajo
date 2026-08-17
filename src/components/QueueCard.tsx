@@ -20,6 +20,13 @@ const STATUS_LABEL: Record<QueueItem["status"], string> = {
   error: "Error",
 };
 
+const STATUS_STYLE: Record<QueueItem["status"], string> = {
+  pending: "text-muted-foreground",
+  processing: "text-primary",
+  completed: "text-green-500",
+  error: "text-destructive",
+}
+
 interface QueueCardProps {
   item: QueueItem;
   isSelected: boolean;
@@ -42,7 +49,7 @@ export function QueueCard({ item, isSelected, onSelect, onRemove }: QueueCardPro
         {item.thumbnailUrl ? (
           <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-muted text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center bg-muted text-[12px] uppercase tracking-[0.2em] text-muted-foreground">
             Sin miniatura.
           </div>
         )}
@@ -66,9 +73,9 @@ export function QueueCard({ item, isSelected, onSelect, onRemove }: QueueCardPro
             {item.fileName}
           </p>
 
-          <div className="mt-1 flex justify-between gap-2 font-mono text-[11px] text-muted-foreground">
-            <span>{formatDuration(item.durationSec)}</span>
-            <span>{STATUS_LABEL[item.status]}</span>
+          <div className="mt-1 flex justify-between gap-2 text-[12px] text-muted-foreground">
+            <span className="font-mono">{formatDuration(item.durationSec)}</span>
+            <span className={STATUS_STYLE[item.status]}>{STATUS_LABEL[item.status]}</span>
           </div>
         </div>
       </div>
