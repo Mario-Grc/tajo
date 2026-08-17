@@ -16,6 +16,12 @@ This project is actively in development. Main features right now include:
 - Trim
 - Export to a chosen path
 
+## Planned Features
+Some of the features planned for future releases include:
+- English language support
+- Linux compatibility
+- Expand editing options (format conversion, compression, etc.)
+
 ## Stack
 
 <p align="left">
