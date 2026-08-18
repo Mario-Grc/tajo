@@ -51,7 +51,7 @@ export function VideoPlayer({ inputPath }: VideoPlayerProps) {
                 className="text-foreground hover:text-primary"
                 title={isPlaying ? "Pausar" : "Reproducir"}
               >
-                {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
+                {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
               </button>
             
               <div className="flex items-center group flex-shrink-0">
@@ -60,7 +60,7 @@ export function VideoPlayer({ inputPath }: VideoPlayerProps) {
                   className="text-foreground hover:text-primary flex-shrink-0"
                   title={isMuted ? "Activar sonido" : "Silenciar"}
                   >
-                  {isMuted || volume === 0 ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+                  {isMuted || volume === 0 ? <VolumeX className="size-6" /> : <Volume2 className="size-6" />}
                 </button>
 
                 <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all duration-200 ease-out flex items-center pr-1">
@@ -76,7 +76,7 @@ export function VideoPlayer({ inputPath }: VideoPlayerProps) {
               </div>
             </div>
 
-            <span className="font-mono text-xs text-muted-foreground flex-shrink-0">
+            <span className="font-mono text-sm text-muted-foreground flex-shrink-0">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>

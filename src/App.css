@@ -132,6 +132,10 @@
     @apply bg-background text-foreground;
     font-family: 'Geist Variable', sans-serif;
   }
+  button:not(:disabled),
+    [role="button"]:not(:disabled) {
+      cursor: pointer;
+  }
 }
 
 ::-webkit-scrollbar {

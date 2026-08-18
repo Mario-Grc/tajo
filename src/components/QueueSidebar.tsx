@@ -26,7 +26,7 @@ export function QueueSidebar({ items, selectedId, isAddingFiles, onSelect, onRem
           <PanelLeftOpen className="size-4" />
         </button>
         {queueCount > 0 && (
-          <span className="text-[10px] leading-none bg-secondary text-foreground rounded-full size-4 flex items-center justify-center">
+          <span className="text-xs leading-none bg-secondary text-foreground size-5 flex items-center justify-center">
             {queueCount}
           </span>
         )}
@@ -40,6 +40,11 @@ export function QueueSidebar({ items, selectedId, isAddingFiles, onSelect, onRem
         <h2 className="text-sm tracking-wide text-muted-foreground">
           Cola
         </h2>
+        {queueCount > 0 && (
+          <span className="text-xs leading-none bg-secondary text-foreground size-5 flex items-center justify-center">
+            {queueCount}
+          </span>
+        )}
         <button
           onClick={() => setShowQueue(false)}
           className="text-muted-foreground hover:text-foreground"

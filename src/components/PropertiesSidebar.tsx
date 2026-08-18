@@ -178,7 +178,7 @@ export function PropertiesSidebar({
             <label className="text-xs text-muted-foreground">Fin</label>
             <Input
               type="text"
-              placeholder="00:00:10"
+              placeholder="00:00:00"
               value={endDraft}
               onChange={(e) => setEndDraft(sanitizeTimecodeInput(e.target.value))}
               onBlur={commitEndTime}

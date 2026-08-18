@@ -31,21 +31,21 @@ export function Header(){
             <div className="flex h-full items-stretch">
                 <button
                 onClick={() => appWindow.minimize()}
-                className="w-11 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                className="w-11 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-default"
                 >
                 <Minus size={16} />
                 </button>
                 
                 <button
                 onClick={() => appWindow.toggleMaximize()}
-                className="w-11 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                className="w-11 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-default"
                 >
                 {isMaximized ? <Copy size={14} /> : <Square size={14} />}
                 </button>
 
                 <button
                 onClick={() => appWindow.close()}
-                className="w-11 flex items-center justify-center text-muted-foreground hover:bg-red-600 hover:text-white transition-colors"
+                className="w-11 flex items-center justify-center text-muted-foreground hover:bg-red-600 hover:text-white transition-colors cursor-default"
                 >
                 <X size={16} />
                 </button>
