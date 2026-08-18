@@ -8,12 +8,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@layer base {
-  body {
-    font-family: 'Geist Variable', sans-serif;
-  }
-}
-
 @theme inline {
     --font-sans: 'Geist Variable', sans-serif;
     --font-mono: 'Geist Mono Variable', monospace;
@@ -130,14 +124,14 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
-  body {
+  }
+  html, body, #root {
+    overscroll-behavior: none;
+  }
+  html, body {
     @apply bg-background text-foreground;
     font-family: 'Geist Variable', sans-serif;
-    }
-  html {
-    font-family: 'Geist Variable', sans-serif;
-    }
+  }
 }
 
 ::-webkit-scrollbar {
