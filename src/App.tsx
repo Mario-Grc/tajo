@@ -65,9 +65,27 @@ function App() {
   const handleAddVideos = async (filePaths: string[]) => {
     if (filePaths.length === 0) return;
 
+    const existingPaths = new Set(queue.items.map((item) => item.inputPath));
+    const uniqueNewPaths = Array.from(new Set(filePaths)).filter((path) => !existingPaths.has(path));
+
+    const skippedCount = filePaths.length - uniqueNewPaths.length;
+
+    if (uniqueNewPaths.length === 0) {
+      toast.info(
+        filePaths.length === 1
+          ? "El vídeo ya está en la cola."
+          : "Los vídeos ya estaban en la cola."
+      );
+      return;
+    }
+
+    if (skippedCount > 0) {
+      toast.info(`${skippedCount} ${skippedCount === 1 ? "vídeo omitido" : "vídeos omitidos"} por estar ya en la cola.`)
+    }
+
     queue.setIsAddingFiles(true);
     try {
-      const items = await buildQueueItems(filePaths);
+      const items = await buildQueueItems(uniqueNewPaths);
       queue.addItems(items);
     } catch (error) {
       console.error("Error al obtener metadatos de los vídeos:", error);

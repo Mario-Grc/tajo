@@ -26,7 +26,7 @@ export function QueueSidebar({ items, selectedId, isAddingFiles, onSelect, onRem
           <PanelLeftOpen className="size-4" />
         </button>
         {queueCount > 0 && (
-          <span className="text-xs leading-none bg-secondary text-foreground size-5 flex items-center justify-center">
+          <span className="text-xs leading-none bg-secondary text-foreground w-full h-6 flex items-center justify-center">
             {queueCount}
           </span>
         )}
@@ -41,7 +41,7 @@ export function QueueSidebar({ items, selectedId, isAddingFiles, onSelect, onRem
           Cola
         </h2>
         {queueCount > 0 && (
-          <span className="text-xs leading-none bg-secondary text-foreground size-5 flex items-center justify-center">
+          <span className="text-xs leading-none bg-secondary text-foreground h-full w-6 flex items-center justify-center">
             {queueCount}
           </span>
         )}

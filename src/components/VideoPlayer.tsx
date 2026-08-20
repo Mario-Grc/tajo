@@ -21,7 +21,7 @@ export function VideoPlayer({ inputPath }: VideoPlayerProps) {
   const assetUrl = convertFileSrc(inputPath);
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="flex flex-1 min-h-0 items-center justify-center">
         {hasError ? (
           <p className="text-sm text-muted-foreground">
