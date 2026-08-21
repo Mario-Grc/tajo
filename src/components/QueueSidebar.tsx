@@ -2,18 +2,62 @@ import { Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
 import type { QueueItem } from "../types/queue";
 import { QueueCard } from "./QueueCard";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  restrictToFirstScrollableAncestor,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 interface QueueSidebarProps {
   items: QueueItem[];
   selectedId: string | null;
+  processingItemId: string | null;
   isAddingFiles: boolean;
   onSelect: (id: string) => void;
   onRemove: (id: string) => void;
+  onReorder: (oldIndex: number, newIndex: number) => void;
 }
 
-export function QueueSidebar({ items, selectedId, isAddingFiles, onSelect, onRemove }: QueueSidebarProps) {
+export function QueueSidebar({ items, selectedId, processingItemId, isAddingFiles, onSelect, onRemove, onReorder }: QueueSidebarProps) {
   const [showQueue, setShowQueue] = useState(true);
   const queueCount = items.length;
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    onReorder(oldIndex, newIndex);
+  }
+
+  function moveItemToEdge(id: string, edge: "start" | "end") {
+    const currentIndex = items.findIndex((item) => item.id === id);
+    if (currentIndex === -1) return;
+
+    const targetIndex = edge === "start" ? 0 : items.length - 1;
+    if (currentIndex !== targetIndex) onReorder(currentIndex, targetIndex);
+  }
 
   if (!showQueue) {
     return (
@@ -54,19 +98,35 @@ export function QueueSidebar({ items, selectedId, isAddingFiles, onSelect, onRem
         </button>
       </div>
       <div className="relative flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto">
+        <div className="h-full overflow-y-auto overflow-x-hidden">
           {items.length === 0 ? (
             <p className="text-sm text-muted-foreground m-3">Sin vídeos en cola.</p>
           ) : (
-            items.map((item) => (
-              <QueueCard
-                key={item.id}
-                item={item}
-                isSelected={item.id === selectedId}
-                onSelect={onSelect}
-                onRemove={onRemove}
-              />
-            ))
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              autoScroll={false}
+              modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={items.map((item) => item.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {items.map((item) => (
+                  <QueueCard
+                    key={item.id}
+                    item={item}
+                    isSelected={item.id === selectedId}
+                    isProcessing={item.id === processingItemId}
+                    onSelect={onSelect}
+                    onRemove={onRemove}
+                    onMoveToStart={() => moveItemToEdge(item.id, "start")}
+                    onMoveToEnd={() => moveItemToEdge(item.id, "end")}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
 

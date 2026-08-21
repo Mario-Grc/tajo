@@ -1,4 +1,7 @@
 import { X } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { ContextMenu } from "radix-ui";
 import type { QueueItem } from "../types/queue";
 import { cn } from "@/lib/utils";
 
@@ -30,21 +33,52 @@ const STATUS_STYLE: Record<QueueItem["status"], string> = {
 interface QueueCardProps {
   item: QueueItem;
   isSelected: boolean;
+  isProcessing: boolean;
   onSelect: (id: string) => void;
   onRemove: (id: string) => void;
+  onMoveToStart: () => void;
+  onMoveToEnd: () => void;
 }
 
-export function QueueCard({ item, isSelected, onSelect, onRemove }: QueueCardProps) {
+export function QueueCard({
+  item,
+  isSelected,
+  isProcessing,
+  onSelect,
+  onRemove,
+  onMoveToStart,
+  onMoveToEnd,
+}: QueueCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id, disabled: isProcessing });
+
   return (
-    <div
-      onClick={() => onSelect(item.id)}
-      className={cn(
-        "group relative cursor-pointer overflow-hidden border bg-background transition-all duration-200",
-        isSelected
-          ? "border-primary"
-          : "border-border hover:border-muted-foreground hover:bg-muted/20"
-      )}
-    >
+    <ContextMenu.Root>
+      <ContextMenu.Trigger asChild>
+        <div
+          ref={setNodeRef}
+          style={{
+            transform: CSS.Transform.toString(transform),
+            transition,
+            zIndex: isDragging ? 10 : undefined,
+          }}
+          {...attributes}
+          {...listeners}
+          onClick={() => onSelect(item.id)}
+          className={cn(
+            "group relative cursor-grab overflow-hidden border bg-background transition-colors duration-200 active:cursor-grabbing",
+            isProcessing && "cursor-default opacity-70",
+            isSelected
+              ? "border-primary"
+              : "border-border hover:border-muted-foreground hover:bg-muted/20"
+          )}
+        >
       <div className="relative aspect-video w-full overflow-hidden bg-muted">
         {item.thumbnailUrl ? (
           <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
@@ -57,6 +91,7 @@ export function QueueCard({ item, isSelected, onSelect, onRemove }: QueueCardPro
         <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-background via-background/90 to-transparent" />
 
         <button
+          onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => {
             event.stopPropagation();
             onRemove(item.id);
@@ -79,6 +114,27 @@ export function QueueCard({ item, isSelected, onSelect, onRemove }: QueueCardPro
           </div>
         </div>
       </div>
-    </div>
+        </div>
+      </ContextMenu.Trigger>
+
+      <ContextMenu.Portal>
+        <ContextMenu.Content className="z-50 min-w-40 border border-border bg-popover p-1 text-popover-foreground">
+          <ContextMenu.Item
+            disabled={isProcessing}
+            onSelect={onMoveToStart}
+            className="cursor-default px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent"
+          >
+            Mover al principio
+          </ContextMenu.Item>
+          <ContextMenu.Item
+            disabled={isProcessing}
+            onSelect={onMoveToEnd}
+            className="cursor-default px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent"
+          >
+            Mover al final
+          </ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu.Portal>
+    </ContextMenu.Root>
   );
 }

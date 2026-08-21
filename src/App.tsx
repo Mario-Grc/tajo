@@ -203,8 +203,10 @@ function App() {
         <QueueSidebar
           items={queue.items}
           selectedId={queue.selectedId}
+          processingItemId={queue.processingItemId}
           onSelect={queue.selectItem}
           onRemove={queue.removeItem}
+          onReorder={queue.reorderItems}
           isAddingFiles={queue.isAddingFiles}
         />
 

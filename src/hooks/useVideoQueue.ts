@@ -1,3 +1,4 @@
+import { arrayMove } from "@dnd-kit/sortable";
 import { useReducer, useCallback, useMemo, useState } from 'react';
 import type { QueueItem, QueueItemStatus } from '../types/queue';
 
@@ -13,7 +14,8 @@ type QueueAction =
   | { type: 'REMOVE_ITEM'; id: string }
   | { type: 'UPDATE_ITEM'; id: string; patch: Partial<QueueItem> }
   | { type: 'SET_STATUS'; id: string; status: QueueItemStatus; errorMessage?: string }
-  | { type: 'SET_PROCESSING'; id: string | null };
+  | { type: 'SET_PROCESSING'; id: string | null }
+  | { type: "REORDER_ITEMS"; oldIndex: number; newIndex: number };
 
 const initialState: QueueState = {
   items: [],
@@ -33,11 +35,12 @@ function queueReducer(state: QueueState, action: QueueAction): QueueState {
       return { ...state, selectedId: action.id };
 
     case 'REMOVE_ITEM': {
+      const removedIndex = state.items.findIndex((item) => item.id === action.id);
       const items = state.items.filter((item) => item.id !== action.id);
       let selectedId = state.selectedId;
       if (state.selectedId === action.id) {
-        const nextPending = items.find((item) => item.status === 'pending');
-        selectedId = nextPending?.id ?? items[0]?.id ?? null;
+        const nextItem = items[removedIndex] ?? items[removedIndex - 1];
+        selectedId = nextItem?.id ?? null;
       }
       return { ...state, items, selectedId };
     }
@@ -62,6 +65,12 @@ function queueReducer(state: QueueState, action: QueueAction): QueueState {
 
     case 'SET_PROCESSING':
       return { ...state, processingItemId: action.id };
+
+    case "REORDER_ITEMS":
+      return {
+        ...state,
+        items: arrayMove(state.items, action.oldIndex, action.newIndex),
+      };
 
     default:
       return state;
@@ -96,6 +105,10 @@ export function useVideoQueue() {
     (id: string | null) => dispatch({ type: 'SET_PROCESSING', id }),
     []
   );
+  const reorderItems = useCallback(
+    (oldIndex: number, newIndex: number) => dispatch({ type: 'REORDER_ITEMS', oldIndex, newIndex }),
+    []
+  );
 
   return {
     items: state.items,
@@ -110,5 +123,6 @@ export function useVideoQueue() {
     setProcessing,
     isAddingFiles,
     setIsAddingFiles,
+    reorderItems,
   };
 }
