@@ -12,6 +12,7 @@ type QueueAction =
   | { type: 'ADD_ITEMS'; items: QueueItem[] }
   | { type: 'SELECT_ITEM'; id: string }
   | { type: 'REMOVE_ITEM'; id: string }
+  | { type: 'CLEAR_QUEUE_EXCEPT_PROCESSING' }
   | { type: 'UPDATE_ITEM'; id: string; patch: Partial<QueueItem> }
   | { type: 'SET_STATUS'; id: string; status: QueueItemStatus; errorMessage?: string }
   | { type: 'SET_PROCESSING'; id: string | null }
@@ -42,6 +43,14 @@ function queueReducer(state: QueueState, action: QueueAction): QueueState {
         const nextItem = items[removedIndex] ?? items[removedIndex - 1];
         selectedId = nextItem?.id ?? null;
       }
+      return { ...state, items, selectedId };
+    }
+
+    case 'CLEAR_QUEUE_EXCEPT_PROCESSING': {
+      const items = state.items.filter((item) => item.id === state.processingItemId);
+      const selectedId = items.some((item) => item.id === state.selectedId)
+        ? state.selectedId
+        : items[0]?.id ?? null;
       return { ...state, items, selectedId };
     }
 
@@ -92,6 +101,10 @@ export function useVideoQueue() {
   );
   const selectItem = useCallback((id: string) => dispatch({ type: 'SELECT_ITEM', id }), []);
   const removeItem = useCallback((id: string) => dispatch({ type: 'REMOVE_ITEM', id }), []);
+  const clearQueueExceptProcessing = useCallback(
+    () => dispatch({ type: 'CLEAR_QUEUE_EXCEPT_PROCESSING' }),
+    []
+  );
   const updateItem = useCallback(
     (id: string, patch: Partial<QueueItem>) => dispatch({ type: 'UPDATE_ITEM', id, patch }),
     []
@@ -118,6 +131,7 @@ export function useVideoQueue() {
     addItems,
     selectItem,
     removeItem,
+    clearQueueExceptProcessing,
     updateItem,
     setStatus,
     setProcessing,

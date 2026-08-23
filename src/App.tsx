@@ -95,6 +95,10 @@ function App() {
     }
   };
 
+  const handleDeleteQueue = async () => {
+    queue.clearQueueExceptProcessing();
+  };
+
   const handlePickInput = async () => {
     const selected = await pickVideos();
 
@@ -206,6 +210,7 @@ function App() {
           processingItemId={queue.processingItemId}
           onSelect={queue.selectItem}
           onRemove={queue.removeItem}
+          onClearQueue={handleDeleteQueue}
           onReorder={queue.reorderItems}
           isAddingFiles={queue.isAddingFiles}
         />

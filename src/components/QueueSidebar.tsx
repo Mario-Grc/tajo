@@ -1,7 +1,18 @@
-import { Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Loader2, PanelLeftClose, PanelLeftOpen, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { QueueItem } from "../types/queue";
 import { QueueCard } from "./QueueCard";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 import {
   DndContext,
   PointerSensor,
@@ -26,10 +37,11 @@ interface QueueSidebarProps {
   isAddingFiles: boolean;
   onSelect: (id: string) => void;
   onRemove: (id: string) => void;
+  onClearQueue: () => void;
   onReorder: (oldIndex: number, newIndex: number) => void;
 }
 
-export function QueueSidebar({ items, selectedId, processingItemId, isAddingFiles, onSelect, onRemove, onReorder }: QueueSidebarProps) {
+export function QueueSidebar({ items, selectedId, processingItemId, isAddingFiles, onSelect, onRemove, onClearQueue, onReorder }: QueueSidebarProps) {
   const [showQueue, setShowQueue] = useState(true);
   const queueCount = items.length;
   const sensors = useSensors(
@@ -70,7 +82,7 @@ export function QueueSidebar({ items, selectedId, processingItemId, isAddingFile
           <PanelLeftOpen className="size-4" />
         </button>
         {queueCount > 0 && (
-          <span className="text-xs leading-none bg-secondary text-foreground w-full h-6 flex items-center justify-center">
+          <span className="text-sm leading-none text-muted-foreground w-full h-6 flex items-center justify-center">
             {queueCount}
           </span>
         )}
@@ -82,20 +94,42 @@ export function QueueSidebar({ items, selectedId, processingItemId, isAddingFile
     <aside className="w-64 flex-shrink-0 border-r border-border flex flex-col overflow-hidden">
       <div className="h-10 flex-shrink-0 flex items-center justify-between border-b border-border px-3">
         <h2 className="text-sm tracking-wide text-muted-foreground">
-          Cola
+          Cola {queueCount > 0 && `(${queueCount})`}
         </h2>
-        {queueCount > 0 && (
-          <span className="text-xs leading-none bg-secondary text-foreground h-full w-6 flex items-center justify-center">
-            {queueCount}
-          </span>
-        )}
-        <button
-          onClick={() => setShowQueue(false)}
-          className="text-muted-foreground hover:text-foreground"
-          title="Ocultar cola"
-        >
-          <PanelLeftClose className="size-4" />
-        </button>
+        <div className="flex items-center gap-4">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                disabled={items.length === 0 || items.every((item) => item.id === processingItemId)}
+                className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                title="Vaciar cola excepto el vídeo en ejecución"
+                aria-label="Vaciar cola excepto el vídeo en ejecución"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Vaciar cola?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Se eliminarán de la cola todos los vídeos que no se estén procesando.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={onClearQueue}>Eliminar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <button
+            onClick={() => setShowQueue(false)}
+            className="text-muted-foreground hover:text-foreground"
+            title="Ocultar cola"
+            >
+            <PanelLeftClose className="size-4" />
+          </button>
+        </div>
       </div>
       <div className="relative flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto overflow-x-hidden">
