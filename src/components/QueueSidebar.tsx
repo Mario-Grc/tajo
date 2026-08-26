@@ -1,4 +1,5 @@
 import { Loader2, PanelLeftClose, PanelLeftOpen, Trash2 } from "lucide-react";
+import {VideoInfoDialog} from "./VideoInfoDialog";
 import { useState } from "react";
 import type { QueueItem } from "../types/queue";
 import { QueueCard } from "./QueueCard";
@@ -43,7 +44,9 @@ interface QueueSidebarProps {
 
 export function QueueSidebar({ items, selectedId, processingItemId, isAddingFiles, onSelect, onRemove, onClearQueue, onReorder }: QueueSidebarProps) {
   const [showQueue, setShowQueue] = useState(true);
+  const [infoItem, setInfoItem] = useState<QueueItem | null>(null);
   const queueCount = items.length;
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -157,6 +160,7 @@ export function QueueSidebar({ items, selectedId, processingItemId, isAddingFile
                     onRemove={onRemove}
                     onMoveToStart={() => moveItemToEdge(item.id, "start")}
                     onMoveToEnd={() => moveItemToEdge(item.id, "end")}
+                    onShowInfo={setInfoItem}
                   />
                 ))}
               </SortableContext>
@@ -170,6 +174,7 @@ export function QueueSidebar({ items, selectedId, processingItemId, isAddingFile
           </div>
         )}
       </div>
+      <VideoInfoDialog item={infoItem} onOpenChange={(open) => !open && setInfoItem(null)} />
     </aside>
   );
 }

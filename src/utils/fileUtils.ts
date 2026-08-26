@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { dirname, join } from "@tauri-apps/api/path";
 import type { QueueItem } from "../types/queue";
-import type { VideoInfo } from "../types/video-info";
+import type { FfprobeMetadata, VideoDetails, VideoInfo } from "../types/video-info";
 
 export const VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "avi", "webm", "m4v", "wmv", "flv"];
 
@@ -51,6 +51,7 @@ export async function buildQueueItems(paths: string[]): Promise<QueueItem[]> {
           endTime: null,
           thumbnailUrl: `data:image/jpeg;base64,${info.thumbnailBase64}`,
           status: "pending",
+          details: parseVideoDetails(info.metadata),
         };
       } catch {
         return {
@@ -64,8 +65,27 @@ export async function buildQueueItems(paths: string[]): Promise<QueueItem[]> {
           thumbnailUrl: null,
           status: "error",
           errorMessage: "No se pudo leer el vídeo",
+          details: null,
         };
       }
     })
   );
+}
+
+export function parseVideoDetails(metadata: FfprobeMetadata): VideoDetails {
+  const videoStream = metadata.streams.find((s) => s.codec_type === "video");
+
+  let fps: number | null = null;
+  if (videoStream?.r_frame_rate) {
+    const [num, den] = videoStream.r_frame_rate.split("/").map(Number);
+    fps = den ? num / den : num;
+  }
+
+  return {
+    width: videoStream?.width ?? null,
+    height: videoStream?.height ?? null,
+    fps,
+    codec: videoStream?.codec_name ?? null,
+    sizeBytes: metadata.format.size ? Number(metadata.format.size) : null,
+  };
 }

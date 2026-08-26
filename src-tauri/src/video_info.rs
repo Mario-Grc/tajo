@@ -10,26 +10,29 @@ use tauri_plugin_shell::process::CommandEvent;
 pub struct VideoInfo {
     pub duration_sec: f64,
     pub thumbnail_base64: String,
+    pub metadata: serde_json::Value,
 }
 
 #[tauri::command]
 pub async fn get_video_info(app: AppHandle, input_path: String) -> Result<VideoInfo, FfmpegError> {
-    let duration_sec = probe_duration(&app, &input_path).await?;
+    let metadata = probe_metadata(&app, &input_path).await?;
+    let duration_sec = extract_duration(&metadata)?;
     let thumbnail_base64 = generate_thumbnail(&app, &input_path).await?;
 
     Ok(VideoInfo {
         duration_sec,
         thumbnail_base64,
+        metadata,
     })
 }
 
-async fn probe_duration(app: &AppHandle, input_path: &str) -> Result<f64, FfmpegError> {
+async fn probe_metadata(app: &AppHandle, input_path: &str) -> Result<serde_json::Value, FfmpegError> {
     let output = ffprobe_command(app)
         .args([
             "-v",
             "error",
-            "-show_entries",
-            "format=duration",
+            "-show_format",
+            "-show_streams",
             "-of",
             "json",
             input_path,
@@ -44,22 +47,23 @@ async fn probe_duration(app: &AppHandle, input_path: &str) -> Result<f64, Ffmpeg
     if !output.status.success() {
         let full = String::from_utf8_lossy(&output.stderr).to_string();
         let summary = extract_summary(&full, "ffprobe falló sin mensaje de error");
-
         return Err(FfmpegError { summary, full });
     }
 
     let json_str = String::from_utf8_lossy(&output.stdout);
-    let parsed: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| FfmpegError {
-        summary: "No se pudo leer la duración del vídeo".to_string(),
+    serde_json::from_str(&json_str).map_err(|e| FfmpegError {
+        summary: "No se pudieron leer los metadatos del vídeo".to_string(),
         full: format!("{e}\nsalida de ffprobe: {json_str}"),
-    })?;
+    })
+}
 
-    parsed["format"]["duration"]
+fn extract_duration(metadata: &serde_json::Value) -> Result<f64, FfmpegError> {
+    metadata["format"]["duration"]
         .as_str()
         .and_then(|value| value.parse::<f64>().ok())
         .ok_or_else(|| FfmpegError {
             summary: "Duración no encontrada en la salida de ffprobe".to_string(),
-            full: json_str.to_string(),
+            full: metadata.to_string(),
         })
 }
 
