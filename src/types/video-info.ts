@@ -4,11 +4,14 @@ export interface FfprobeStream {
   width?: number;
   height?: number;
   r_frame_rate?: string;
+  channels?: number;
+  sample_rate?: string;
 }
 export interface FfprobeMetadata {
-  format: { size?: string; [key: string]: unknown };
+  format: { size?: string; bit_rate?: string; [key: string]: unknown };
   streams: FfprobeStream[];
 }
+
 export interface VideoInfo {
   durationSec: number;
   thumbnailBase64: string;
@@ -20,4 +23,8 @@ export interface VideoDetails {
   fps: number | null;
   codec: string | null;
   sizeBytes: number | null;
+  bitRate: number | null;
+  audioCodec: string | null;
+  audioChannels: number | null;
+  audioSampleRate: number | null;
 }

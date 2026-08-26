@@ -74,6 +74,7 @@ export async function buildQueueItems(paths: string[]): Promise<QueueItem[]> {
 
 export function parseVideoDetails(metadata: FfprobeMetadata): VideoDetails {
   const videoStream = metadata.streams.find((s) => s.codec_type === "video");
+  const audioStream = metadata.streams.find((s) => s.codec_type === "audio");
 
   let fps: number | null = null;
   if (videoStream?.r_frame_rate) {
@@ -87,5 +88,9 @@ export function parseVideoDetails(metadata: FfprobeMetadata): VideoDetails {
     fps,
     codec: videoStream?.codec_name ?? null,
     sizeBytes: metadata.format.size ? Number(metadata.format.size) : null,
+    bitRate: metadata.format.bit_rate ? Number(metadata.format.bit_rate) : null,
+    audioCodec: audioStream?.codec_name ?? null,
+    audioChannels: audioStream?.channels ?? null,
+    audioSampleRate: audioStream?.sample_rate ? Number(audioStream.sample_rate) : null,
   };
 }

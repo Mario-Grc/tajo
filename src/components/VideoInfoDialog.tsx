@@ -23,6 +23,16 @@ const rows = (item: QueueItem) => [
     label: "Tamaño",
     value: item.details?.sizeBytes ? `${(item.details.sizeBytes / 1_000_000).toFixed(1)} MB` : "-",
   },
+  {
+    label: "Bitrate",
+    value: item.details?.bitRate ? `${(item.details.bitRate / 1_000_000).toFixed(1)} Mbps` : "-",
+  },
+  {
+    label: "Audio",
+    value: item.details?.audioCodec
+      ? `${item.details.audioCodec}, ${item.details.audioChannels === 1 ? "Mono" : "Estéreo"}, ${Math.round(Number(item.details.audioSampleRate) / 1000)} kHz`
+      : "Sin audio",
+  },
 ];
 
 export function VideoInfoDialog({ item, onOpenChange }: VideoInfoDialogProps) {
