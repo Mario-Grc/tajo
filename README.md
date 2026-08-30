@@ -11,8 +11,9 @@ Created both as a practical tool for everyday clip editing and as a learning pro
 ## Status
 
 This project is actively in development. Main features right now include:
-- Load a video (file picker or drag and drop)
+- Load videos (file picker or drag and drop)
 - Preview with a built-in player
+- View video information (duration, resolution, codec, etc.)
 - Trim
 - Export to a chosen path
 
@@ -21,6 +22,7 @@ Some of the features planned for future releases include:
 - English language support
 - Linux compatibility
 - Expand editing options (format conversion, compression, etc.)
+- Batch processing
 
 ## Stack
 
