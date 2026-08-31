@@ -1,5 +1,11 @@
-# Tajo
-Simple, lightweight desktop video editor built for quick video trimming. It isn't meant to replace other full-fledged video editing software. There are no complex timelines or heavy effects here.
+<div align="center">
+  <img src="src-tauri/icons/Square310x310Logo.png" alt="Tajo Logo" width="120"/>
+  
+  # Tajo
+
+</div>
+
+Simple and lightweight desktop video editor built for quick video trimming. It isn't meant to replace other full-fledged video editing software. There are no complex timelines or heavy effects here.
 
 Created both as a practical tool for everyday clip editing and as a learning project to explore Rust and [Tauri v2](https://v2.tauri.app/).
 
@@ -8,7 +14,7 @@ Created both as a practical tool for everyday clip editing and as a learning pro
 
 <img src="main-screenshot.png" alt="main screenshot" width="800"/>
 
-## Status
+## Current State
 
 This project is actively in development. Main features right now include:
 - Load videos (file picker or drag and drop)
@@ -18,6 +24,7 @@ This project is actively in development. Main features right now include:
 - Export to a chosen path
 
 ## Planned Features
+
 Some of the features planned for future releases include:
 - English language support
 - Linux compatibility
@@ -39,6 +46,13 @@ Some of the features planned for future releases include:
 - React + TypeScript + Tailwind CSS v4 + shadcn/ui
 - Rust for the operations engine (building and running ffmpeg commands)
 - ffmpeg and ffprobe as external processes
+
+## Architecture
+
+<!-- The application follows a modular architecture with the following components:
+- **Frontend**: Built with React and TypeScript, using Tailwind CSS for styling.
+- **Backend**: Implemented in Rust, handling the core video processing logic.
+- **Media Processing**: Utilizes FFmpeg and FFprobe for video manipulation and analysis. -->
 
 ## Running locally
 
