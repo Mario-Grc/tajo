@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -60,11 +61,26 @@ export function QueueCard({
     isDragging,
   } = useSortable({ id: item.id, disabled: isProcessing });
 
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+  const setRefs = useCallback(
+    (node: HTMLDivElement | null) => {
+      setNodeRef(node);
+      nodeRef.current = node;
+    },
+    [setNodeRef]
+  );
+
+  useEffect(() => {
+    if (isSelected && !isDragging) {
+      nodeRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  }, [isSelected, isDragging]);
+
   return (
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>
         <div
-          ref={setNodeRef}
+          ref={setRefs}
           style={{
             transform: CSS.Transform.toString(transform),
             transition,

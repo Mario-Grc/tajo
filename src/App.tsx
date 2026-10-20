@@ -1,9 +1,11 @@
+import { useCallback, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { VideoPlayer } from "./components/VideoPlayer";
+import { VideoInfoDialog } from "./components/VideoInfoDialog";
 import { Header } from "./components/Header";
 import {
   truncate,
@@ -12,9 +14,11 @@ import {
   pickVideos,
 } from "./utils/fileUtils";
 import { useFileDrop } from "./hooks/useFileDrop";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { QueueSidebar } from "./components/QueueSidebar";
 import { PropertiesSidebar } from "./components/PropertiesSidebar";
 import { useVideoQueue } from "./hooks/useVideoQueue";
+import type { QueueItem } from "./types/queue";
 import "sonner/dist/styles.css";
 
 interface FfmpegError {
@@ -60,7 +64,12 @@ function isValidTrimRange(start: number, end: number, durationSec: number | null
 function App() {
   const queue = useVideoQueue();
   const selectedItem = queue.selectedItem;
+  const selectedItemId = selectedItem?.id ?? null;
   const isProcessing = queue.processingItemId !== null;
+  const [infoItemId, setInfoItemId] = useState<string | null>(null);
+  const infoItem = infoItemId
+    ? queue.items.find((item) => item.id === infoItemId) ?? null
+    : null;
 
   const handleAddVideos = async (filePaths: string[]) => {
     if (filePaths.length === 0) return;
@@ -123,6 +132,20 @@ function App() {
   };
 
   const { isDragging } = useFileDrop(handleAddVideos);
+
+  const handleShowInfo = useCallback((item: QueueItem) => setInfoItemId(item.id), []);
+  const handleShowSelectedInfo = useCallback(() => {
+    if (selectedItemId) setInfoItemId(selectedItemId);
+  }, [selectedItemId]);
+  const handlePreviousItem = useCallback(() => queue.selectRelative(-1), [queue.selectRelative]);
+  const handleNextItem = useCallback(() => queue.selectRelative(1), [queue.selectRelative]);
+
+  useKeyboardShortcuts({
+    enabled: infoItem === null,
+    onShowInfo: handleShowSelectedInfo,
+    onPreviousItem: handlePreviousItem,
+    onNextItem: handleNextItem,
+  });
 
   const handleTrim = async () => {
     if (!selectedItem) {
@@ -212,6 +235,7 @@ function App() {
           onRemove={queue.removeItem}
           onClearQueue={handleDeleteQueue}
           onReorder={queue.reorderItems}
+          onShowInfo={handleShowInfo}
           isAddingFiles={queue.isAddingFiles}
         />
 
@@ -267,6 +291,13 @@ function App() {
       </div>
 
       {/* Footer placeholder... */}
+
+      <VideoInfoDialog
+        item={infoItem}
+        onOpenChange={(open) => {
+          if (!open) setInfoItemId(null);
+        }}
+      />
 
       <Toaster
         theme="dark"

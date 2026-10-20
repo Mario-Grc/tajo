@@ -11,6 +11,7 @@ interface QueueState {
 type QueueAction =
   | { type: 'ADD_ITEMS'; items: QueueItem[] }
   | { type: 'SELECT_ITEM'; id: string }
+  | { type: 'SELECT_RELATIVE'; delta: -1 | 1 }
   | { type: 'REMOVE_ITEM'; id: string }
   | { type: 'CLEAR_QUEUE_EXCEPT_PROCESSING' }
   | { type: 'UPDATE_ITEM'; id: string; patch: Partial<QueueItem> }
@@ -34,6 +35,21 @@ function queueReducer(state: QueueState, action: QueueAction): QueueState {
 
     case 'SELECT_ITEM':
       return { ...state, selectedId: action.id };
+
+    case 'SELECT_RELATIVE': {
+      if (state.items.length === 0) return state;
+
+      if (state.selectedId === null) {
+        const index = action.delta > 0 ? 0 : state.items.length - 1;
+        return { ...state, selectedId: state.items[index].id };
+      }
+
+      const currentIndex = state.items.findIndex((item) => item.id === state.selectedId);
+      if (currentIndex === -1) return state;
+
+      const nextIndex = (currentIndex + action.delta + state.items.length) % state.items.length;
+      return { ...state, selectedId: state.items[nextIndex].id };
+    }
 
     case 'REMOVE_ITEM': {
       const removedIndex = state.items.findIndex((item) => item.id === action.id);
@@ -100,6 +116,10 @@ export function useVideoQueue() {
     []
   );
   const selectItem = useCallback((id: string) => dispatch({ type: 'SELECT_ITEM', id }), []);
+  const selectRelative = useCallback(
+    (delta: -1 | 1) => dispatch({ type: 'SELECT_RELATIVE', delta }),
+    []
+  );
   const removeItem = useCallback((id: string) => dispatch({ type: 'REMOVE_ITEM', id }), []);
   const clearQueueExceptProcessing = useCallback(
     () => dispatch({ type: 'CLEAR_QUEUE_EXCEPT_PROCESSING' }),
@@ -130,6 +150,7 @@ export function useVideoQueue() {
     processingItemId: state.processingItemId,
     addItems,
     selectItem,
+    selectRelative,
     removeItem,
     clearQueueExceptProcessing,
     updateItem,
