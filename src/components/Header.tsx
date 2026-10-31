@@ -1,11 +1,13 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Copy, Minus, Square, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { SettingsDialog } from "./SettingsDialog";
 
 const appWindow = getCurrentWindow();
 
 export function Header(){
     const [isMaximized, setIsMaximized] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         appWindow.isMaximized().then(setIsMaximized);
@@ -29,6 +31,8 @@ export function Header(){
             </div>
 
             <div className="flex h-full items-stretch">
+                <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
                 <button
                 onClick={() => appWindow.minimize()}
                 className="w-11 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-default"
