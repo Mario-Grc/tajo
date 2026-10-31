@@ -18,6 +18,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { QueueSidebar } from "./components/QueueSidebar";
 import { PropertiesSidebar } from "./components/PropertiesSidebar";
 import { useVideoQueue } from "./hooks/useVideoQueue";
+import { useSettings } from "./hooks/useSettings";
 import type { QueueItem } from "./types/queue";
 import "sonner/dist/styles.css";
 
@@ -62,6 +63,7 @@ function isValidTrimRange(start: number, end: number, durationSec: number | null
 }
 
 function App() {
+  const { settings } = useSettings();
   const queue = useVideoQueue();
   const selectedItem = queue.selectedItem;
   const selectedItemId = selectedItem?.id ?? null;
@@ -94,7 +96,7 @@ function App() {
 
     queue.setIsAddingFiles(true);
     try {
-      const items = await buildQueueItems(uniqueNewPaths);
+      const items = await buildQueueItems(uniqueNewPaths, settings.outputSuffix);
       queue.addItems(items);
     } catch (error) {
       console.error("Error al obtener metadatos de los vídeos:", error);
@@ -119,7 +121,7 @@ function App() {
   const handlePickOutput = async () => {
     if (!selectedItem) return;
 
-    const defaultPath = selectedItem.outputPath || (selectedItem.inputPath ? await computeDefaultOutputPath(selectedItem.inputPath) : undefined);
+    const defaultPath = selectedItem.outputPath || (selectedItem.inputPath ? await computeDefaultOutputPath(selectedItem.inputPath, settings.outputSuffix) : undefined);
 
     const selected = await save({
       defaultPath,

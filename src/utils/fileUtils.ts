@@ -10,13 +10,13 @@ export function truncate(text: string, max = 180) {
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
 
-export async function computeDefaultOutputPath(inputPath: string): Promise<string> {
+export async function computeDefaultOutputPath(inputPath: string, suffix: string): Promise<string> {
   const dir = await dirname(inputPath);
   const fullName = inputPath.split(/[\\/]/).pop() ?? "output.mp4";
   const dotIndex = fullName.lastIndexOf(".");
   const nameWithoutExt = dotIndex > 0 ? fullName.slice(0, dotIndex) : fullName;
   const ext = dotIndex > 0 ? fullName.slice(dotIndex) : "";
-  return join(dir, `${nameWithoutExt}_recortado${ext}`);
+  return join(dir, `${nameWithoutExt}${suffix}${ext}`);
 }
 
 export async function pickVideos(): Promise<string[]> {
@@ -30,14 +30,14 @@ export async function pickVideos(): Promise<string[]> {
   return Array.isArray(selected) ? selected : [selected];
 }
 
-export async function buildQueueItems(paths: string[]): Promise<QueueItem[]> {
+export async function buildQueueItems(paths: string[], suffix: string): Promise<QueueItem[]> {
   return Promise.all(
     paths.map(async (inputPath): Promise<QueueItem> => {
       const fileName = inputPath.split(/[\\/]/).pop() ?? inputPath;
 
       try {
         const [outputPath, info] = await Promise.all([
-          computeDefaultOutputPath(inputPath),
+          computeDefaultOutputPath(inputPath, suffix),
           invoke<VideoInfo>("get_video_info", { inputPath }),
         ]);
 
@@ -57,7 +57,7 @@ export async function buildQueueItems(paths: string[]): Promise<QueueItem[]> {
         return {
           id: crypto.randomUUID(),
           inputPath,
-          outputPath: await computeDefaultOutputPath(inputPath),
+          outputPath: await computeDefaultOutputPath(inputPath, suffix),
           fileName,
           durationSec: null,
           startTime: null,

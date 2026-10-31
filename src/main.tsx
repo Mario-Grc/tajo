@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./App.css";
 import App from "./App";
+import { SettingsProvider } from "./hooks/useSettings";
 
 document.addEventListener("contextmenu", (e) => {
   const isOverVideo = (e.target as HTMLElement).closest("video");
@@ -11,6 +12,8 @@ document.addEventListener("contextmenu", (e) => {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <SettingsProvider>
+      <App />
+    </SettingsProvider>
   </React.StrictMode>,
 );

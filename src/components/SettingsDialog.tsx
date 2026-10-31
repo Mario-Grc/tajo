@@ -5,6 +5,8 @@ import { getVersion } from "@tauri-apps/api/app"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Switch } from "./ui/switch"
+import { useSettings } from "@/hooks/useSettings"
+import { validateOutputSuffix } from "@/lib/settings"
 import { cn } from "@/lib/utils"
 
 const SECTIONS = [
@@ -61,7 +63,14 @@ function GeneralSection() {
   )
 }
 
-function ExportSection() {
+interface ExportSectionProps {
+  suffix: string
+  suffixError: string | null
+  isLoaded: boolean
+  onSuffixChange: (value: string) => void
+}
+
+function ExportSection({ suffix, suffixError, isLoaded, onSuffixChange }: ExportSectionProps) {
   return (
     <div className="divide-y divide-border">
       <SettingsRow label="Carpeta de salida">
@@ -72,12 +81,23 @@ function ExportSection() {
           Elegir carpeta…
         </Button>
       </SettingsRow>
-      <SettingsRow label="Sufijo del nombre">
-        <Input
-          defaultValue="_recortado"
-          disabled
-          className="h-8 w-40 text-xs disabled:cursor-not-allowed"
-        />
+      <SettingsRow label="Sufijo del nombre de salida">
+        <div className="flex flex-col items-end gap-1">
+          <Input
+            value={suffix}
+            onChange={(event) => onSuffixChange(event.target.value)}
+            disabled={!isLoaded}
+            placeholder={isLoaded ? undefined : "Cargando…"}
+            aria-invalid={suffixError ? true : undefined}
+            aria-describedby={suffixError ? "output-suffix-error" : undefined}
+            className="h-8 w-40 text-xs"
+          />
+          {suffixError && (
+            <p id="output-suffix-error" className="max-w-56 text-right text-xs text-destructive">
+              {suffixError}
+            </p>
+          )}
+        </div>
       </SettingsRow>
       <SettingsRow label="Pasar al siguiente vídeo tras exportar">
         <Switch disabled aria-label="Pasar al siguiente vídeo tras exportar" />
@@ -124,8 +144,11 @@ function AboutSection({ version }: { version: string }) {
 }
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+  const { settings, isLoaded, updateSetting } = useSettings()
   const [activeSection, setActiveSection] = useState<SectionId>("general")
   const [version, setVersion] = useState("—")
+  const [suffixDraft, setSuffixDraft] = useState("")
+  const [suffixError, setSuffixError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -142,9 +165,32 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     }
   }, [open])
 
+  useEffect(() => {
+    if (!open || !isLoaded) return
+
+    setSuffixDraft(settings.outputSuffix)
+    setSuffixError(null)
+  }, [open, isLoaded, settings.outputSuffix])
+
+  const handleSuffixChange = (value: string) => {
+    setSuffixDraft(value)
+
+    const error = validateOutputSuffix(value)
+    setSuffixError(error)
+
+    if (!error) updateSetting("outputSuffix", value)
+  }
+
   const content: Record<SectionId, ReactNode> = {
     general: <GeneralSection />,
-    export: <ExportSection />,
+    export: (
+      <ExportSection
+        suffix={suffixDraft}
+        suffixError={suffixError}
+        isLoaded={isLoaded}
+        onSuffixChange={handleSuffixChange}
+      />
+    ),
     shortcuts: <ShortcutsSection />,
     about: <AboutSection version={version} />,
   }
@@ -203,7 +249,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           </div>
 
           <p className="shrink-0 border-t border-border px-6 py-2 text-xs text-muted-foreground">
-            Ajustes aún no disponibles
+            Algunos ajustes aún no están disponibles
           </p>
         </Dialog.Content>
       </Dialog.Portal>
