@@ -16,6 +16,11 @@ pub fn delete_video(path: String) -> Result<(), DeleteError> {
 }
 
 #[tauri::command]
+pub fn is_dir(path: String) -> bool {
+    Path::new(&path).is_dir()
+}
+
+#[tauri::command]
 pub async fn run_trim(
     app: tauri::AppHandle,
     start: String,

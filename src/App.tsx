@@ -12,6 +12,7 @@ import {
   computeDefaultOutputPath,
   buildQueueItems,
   pickVideos,
+  resolveOutputPathCollisions,
 } from "./utils/fileUtils";
 import { useFileDrop } from "./hooks/useFileDrop";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -96,8 +97,28 @@ function App() {
 
     queue.setIsAddingFiles(true);
     try {
-      const items = await buildQueueItems(uniqueNewPaths, settings.outputSuffix);
-      queue.addItems(items);
+      let effectiveSettings = settings;
+
+      if (settings.outputDirMode === "fixed") {
+        const outputDir = settings.outputDir;
+        const dirExists = outputDir
+          ? await invoke<boolean>("is_dir", { path: outputDir }).catch(() => false)
+          : false;
+
+        if (!dirExists) {
+          toast.warning(
+            "La carpeta de salida configurada no existe. Se usará la carpeta original."
+          );
+          effectiveSettings = { ...settings, outputDirMode: "same" };
+        }
+      }
+
+      const items = await buildQueueItems(uniqueNewPaths, effectiveSettings);
+      const existingQueuePaths = queue.items.flatMap((item) => [
+        item.inputPath,
+        item.outputPath,
+      ]);
+      queue.addItems(resolveOutputPathCollisions(items, existingQueuePaths));
     } catch (error) {
       console.error("Error al obtener metadatos de los vídeos:", error);
       toast.error("Error al cargar los vídeos");
@@ -121,7 +142,7 @@ function App() {
   const handlePickOutput = async () => {
     if (!selectedItem) return;
 
-    const defaultPath = selectedItem.outputPath || (selectedItem.inputPath ? await computeDefaultOutputPath(selectedItem.inputPath, settings.outputSuffix) : undefined);
+    const defaultPath = selectedItem.outputPath || (selectedItem.inputPath ? await computeDefaultOutputPath(selectedItem.inputPath, settings) : undefined);
 
     const selected = await save({
       defaultPath,

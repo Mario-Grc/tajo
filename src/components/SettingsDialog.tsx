@@ -2,11 +2,19 @@ import { useEffect, useState, type ReactNode } from "react"
 import { Dialog } from "radix-ui"
 import { Settings, X } from "lucide-react"
 import { getVersion } from "@tauri-apps/api/app"
+import { open as openDialog } from "@tauri-apps/plugin-dialog"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select"
 import { Switch } from "./ui/switch"
 import { useSettings } from "@/hooks/useSettings"
-import { validateOutputSuffix } from "@/lib/settings"
+import { validateOutputSuffix, type OutputDirMode } from "@/lib/settings"
 import { cn } from "@/lib/utils"
 
 const SECTIONS = [
@@ -19,7 +27,7 @@ const SECTIONS = [
 type SectionId = (typeof SECTIONS)[number]["id"]
 
 const SELECT_CLASS =
-  "h-8 border border-input bg-transparent px-2 text-xs text-foreground outline-none disabled:cursor-not-allowed disabled:opacity-50"
+  "h-8 border border-input bg-transparent px-2 text-xs text-foreground outline-none [color-scheme:light] disabled:cursor-not-allowed disabled:opacity-50 dark:[color-scheme:dark]"
 
 // TODO: sustituir por el registro central de atajos cuando exista.
 const SHORTCUTS = [
@@ -67,20 +75,59 @@ interface ExportSectionProps {
   suffix: string
   suffixError: string | null
   isLoaded: boolean
+  outputDirMode: OutputDirMode
+  outputDir: string | null
   onSuffixChange: (value: string) => void
+  onOutputDirModeChange: (mode: OutputDirMode) => void
+  onPickOutputDir: () => void
 }
 
-function ExportSection({ suffix, suffixError, isLoaded, onSuffixChange }: ExportSectionProps) {
+function ExportSection({
+  suffix,
+  suffixError,
+  isLoaded,
+  outputDirMode,
+  outputDir,
+  onSuffixChange,
+  onOutputDirModeChange,
+  onPickOutputDir,
+}: ExportSectionProps) {
   return (
     <div className="divide-y divide-border">
       <SettingsRow label="Carpeta de salida">
-        <select disabled defaultValue="original" className={SELECT_CLASS}>
-          <option value="original">Misma carpeta que el original</option>
-        </select>
-        <Button variant="outline" size="sm" disabled className="disabled:cursor-not-allowed">
-          Elegir carpeta…
-        </Button>
+        <Select
+          value={outputDirMode}
+          onValueChange={(value) => onOutputDirModeChange(value as OutputDirMode)}
+          disabled={!isLoaded}
+        >
+          <SelectTrigger aria-label="Carpeta de salida" className="w-64">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="same">Misma carpeta que el original</SelectItem>
+            <SelectItem value="fixed">Carpeta fija</SelectItem>
+          </SelectContent>
+        </Select>
       </SettingsRow>
+      {outputDirMode === "fixed" && (
+        <div className="px-6 py-3 text-sm">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">Carpeta elegida</span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isLoaded}
+              className="disabled:cursor-not-allowed"
+              onClick={onPickOutputDir}
+            >
+              Elegir carpeta…
+            </Button>
+          </div>
+          <p className="mt-2 break-all text-xs" title={outputDir ?? undefined}>
+            {outputDir ?? "Ninguna carpeta elegida"}
+          </p>
+        </div>
+      )}
       <SettingsRow label="Sufijo del nombre de salida">
         <div className="flex flex-col items-end gap-1">
           <Input
@@ -181,6 +228,46 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     if (!error) updateSetting("outputSuffix", value)
   }
 
+  const handleOutputDirModeChange = async (mode: OutputDirMode) => {
+    if (mode === "same") {
+      updateSetting("outputDirMode", "same")
+      return
+    }
+
+    updateSetting("outputDirMode", "fixed")
+
+    if (settings.outputDir) return
+
+    try {
+      const selected = await openDialog({
+        directory: true,
+        defaultPath: settings.outputDir ?? undefined,
+      })
+
+      if (selected) {
+        updateSetting("outputDir", selected)
+      } else {
+        updateSetting("outputDirMode", "same")
+      }
+    } catch (error) {
+      console.error("No se pudo elegir la carpeta de salida:", error)
+      updateSetting("outputDirMode", "same")
+    }
+  }
+
+  const handlePickOutputDir = async () => {
+    try {
+      const selected = await openDialog({
+        directory: true,
+        defaultPath: settings.outputDir ?? undefined,
+      })
+
+      if (selected) updateSetting("outputDir", selected)
+    } catch (error) {
+      console.error("No se pudo elegir la carpeta de salida:", error)
+    }
+  }
+
   const content: Record<SectionId, ReactNode> = {
     general: <GeneralSection />,
     export: (
@@ -188,7 +275,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         suffix={suffixDraft}
         suffixError={suffixError}
         isLoaded={isLoaded}
+        outputDirMode={settings.outputDirMode}
+        outputDir={settings.outputDir}
         onSuffixChange={handleSuffixChange}
+        onOutputDirModeChange={handleOutputDirModeChange}
+        onPickOutputDir={handlePickOutputDir}
       />
     ),
     shortcuts: <ShortcutsSection />,

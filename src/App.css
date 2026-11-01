@@ -53,6 +53,7 @@
 }
 
 :root {
+    color-scheme: light;
     --background: oklch(1 0 0);
     --foreground: oklch(82.018% 0.01694 17.202);
     --card: oklch(1 0 0);
@@ -88,6 +89,7 @@
 }
 
 .dark {
+    color-scheme: dark;
     --background: oklch(0.21 0.006 285.885);      /* #18181b - zinc-900 */
     --foreground: oklch(0.967 0.001 286.375);      /* #f4f4f5 - zinc-100 */
     --card: oklch(0.274 0.006 286.033);             /* #27272a - zinc-800 */
@@ -135,6 +137,10 @@
   button:not(:disabled),
     [role="button"]:not(:disabled) {
       cursor: pointer;
+  }
+  select option {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
   }
 }
 

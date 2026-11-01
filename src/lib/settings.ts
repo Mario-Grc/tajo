@@ -1,11 +1,17 @@
 import { LazyStore } from "@tauri-apps/plugin-store"
 
+export type OutputDirMode = "same" | "fixed"
+
 export interface Settings {
   outputSuffix: string
+  outputDirMode: OutputDirMode
+  outputDir: string | null
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   outputSuffix: "_recortado",
+  outputDirMode: "same",
+  outputDir: null,
 }
 
 const INVALID_SUFFIX_CHARS = /[\\/:*?"<>|]/
@@ -19,13 +25,24 @@ export function validateOutputSuffix(value: string): string | null {
 }
 
 export async function loadSettings(): Promise<Settings> {
-  const storedSuffix = await store.get<unknown>("outputSuffix")
+  const [storedSuffix, storedMode, storedDir] = await Promise.all([
+    store.get<unknown>("outputSuffix"),
+    store.get<unknown>("outputDirMode"),
+    store.get<unknown>("outputDir"),
+  ])
+
   const outputSuffix =
     typeof storedSuffix === "string" && validateOutputSuffix(storedSuffix) === null
       ? storedSuffix
       : DEFAULT_SETTINGS.outputSuffix
 
-  return { outputSuffix }
+  const outputDir =
+    typeof storedDir === "string" && storedDir.trim().length > 0 ? storedDir : null
+
+  const outputDirMode: OutputDirMode =
+    storedMode === "fixed" && outputDir !== null ? "fixed" : "same"
+
+  return { outputSuffix, outputDirMode, outputDir }
 }
 
 export async function saveSetting<K extends keyof Settings>(

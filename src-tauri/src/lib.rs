@@ -19,6 +19,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::run_trim,
             commands::delete_video,
+            commands::is_dir,
             video_info::get_video_info,
             greet
         ])

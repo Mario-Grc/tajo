@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { dirname, join } from "@tauri-apps/api/path";
 import type { QueueItem } from "../types/queue";
 import type { FfprobeMetadata, VideoDetails, VideoInfo } from "../types/video-info";
+import type { Settings } from "../lib/settings";
 
 export const VIDEO_EXTENSIONS = ["mp4", "mov", "mkv", "avi", "webm", "m4v", "wmv", "flv"];
 
@@ -10,13 +11,60 @@ export function truncate(text: string, max = 180) {
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
 
-export async function computeDefaultOutputPath(inputPath: string, suffix: string): Promise<string> {
-  const dir = await dirname(inputPath);
+const IS_WINDOWS =
+  typeof navigator !== "undefined" && navigator.userAgent.includes("Windows");
+
+function normalizePathForComparison(path: string): string {
+  const normalized = path.replace(/\\/g, "/");
+  return IS_WINDOWS ? normalized.toLowerCase() : normalized;
+}
+
+function addCollisionCounter(path: string, counter: number): string {
+  const fullName = path.split(/[\\/]/).pop() ?? path;
+  const dotIndex = fullName.lastIndexOf(".");
+  const nameWithoutExt = dotIndex > 0 ? fullName.slice(0, dotIndex) : fullName;
+  const ext = dotIndex > 0 ? fullName.slice(dotIndex) : "";
+  const dir = path.slice(0, path.length - fullName.length);
+  return `${dir}${nameWithoutExt} (${counter})${ext}`;
+}
+
+export async function computeDefaultOutputPath(
+  inputPath: string,
+  settings: Settings
+): Promise<string> {
+  const dir =
+    settings.outputDirMode === "fixed" && settings.outputDir
+      ? settings.outputDir
+      : await dirname(inputPath);
   const fullName = inputPath.split(/[\\/]/).pop() ?? "output.mp4";
   const dotIndex = fullName.lastIndexOf(".");
   const nameWithoutExt = dotIndex > 0 ? fullName.slice(0, dotIndex) : fullName;
   const ext = dotIndex > 0 ? fullName.slice(dotIndex) : "";
-  return join(dir, `${nameWithoutExt}${suffix}${ext}`);
+  return join(dir, `${nameWithoutExt}${settings.outputSuffix}${ext}`);
+}
+
+export function resolveOutputPathCollisions(
+  items: QueueItem[],
+  existingPaths: string[]
+): QueueItem[] {
+  const used = new Set(
+    [...existingPaths, ...items.map((item) => item.inputPath)]
+      .filter(Boolean)
+      .map(normalizePathForComparison)
+  );
+
+  return items.map((item) => {
+    let outputPath = item.outputPath;
+    let counter = 2;
+
+    while (used.has(normalizePathForComparison(outputPath))) {
+      outputPath = addCollisionCounter(item.outputPath, counter);
+      counter += 1;
+    }
+
+    used.add(normalizePathForComparison(outputPath));
+    return outputPath === item.outputPath ? item : { ...item, outputPath };
+  });
 }
 
 export async function pickVideos(): Promise<string[]> {
@@ -30,14 +78,14 @@ export async function pickVideos(): Promise<string[]> {
   return Array.isArray(selected) ? selected : [selected];
 }
 
-export async function buildQueueItems(paths: string[], suffix: string): Promise<QueueItem[]> {
+export async function buildQueueItems(paths: string[], settings: Settings): Promise<QueueItem[]> {
   return Promise.all(
     paths.map(async (inputPath): Promise<QueueItem> => {
       const fileName = inputPath.split(/[\\/]/).pop() ?? inputPath;
 
       try {
         const [outputPath, info] = await Promise.all([
-          computeDefaultOutputPath(inputPath, suffix),
+          computeDefaultOutputPath(inputPath, settings),
           invoke<VideoInfo>("get_video_info", { inputPath }),
         ]);
 
@@ -57,7 +105,7 @@ export async function buildQueueItems(paths: string[], suffix: string): Promise<
         return {
           id: crypto.randomUUID(),
           inputPath,
-          outputPath: await computeDefaultOutputPath(inputPath, suffix),
+          outputPath: await computeDefaultOutputPath(inputPath, settings),
           fileName,
           durationSec: null,
           startTime: null,

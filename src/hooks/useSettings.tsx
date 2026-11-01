@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
@@ -25,6 +26,7 @@ const SettingsContext = createContext<SettingsContextValue | null>(null)
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [isLoaded, setIsLoaded] = useState(false)
+  const writeQueue = useRef<Promise<void>>(Promise.resolve())
 
   useEffect(() => {
     let cancelled = false
@@ -49,9 +51,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     <K extends keyof Settings,>(key: K, value: Settings[K]) => {
       setSettings((current) => ({ ...current, [key]: value }))
 
-      saveSetting(key, value).catch((error) => {
-        console.error("No se pudo guardar el ajuste:", error)
-      })
+      writeQueue.current = writeQueue.current
+        .catch(() => {})
+        .then(() => saveSetting(key, value))
+        .catch((error) => {
+          console.error("No se pudo guardar el ajuste:", error)
+        })
     },
     []
   )
